@@ -50,6 +50,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -128,8 +133,15 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
     val text = remember(item.id, changes) { Posts.description(item, Store.messageFor(ctx, item, data.today), Store.footer(ctx)) }
     val index = data.picks.indexOfFirst { it.id == item.id }
     var inGallery by remember(item.id) { mutableIntStateOf(-1) }   // -1: still putting them there
-    var opened by remember(item.id) { mutableStateOf(false) }
-    var copied by remember(item.id) { mutableStateOf(setOf<String>()) }
+    // Saved, so if Android closes Poster while you're in Facebook, you come back to "I posted it".
+    var opened by rememberSaveable(item.id) { mutableStateOf(false) }
+    var copiedText by rememberSaveable(item.id) { mutableStateOf("") }
+    val copied: Set<String> = copiedText.split("|").filter { it.isNotBlank() }.toSet()
+    var postedNow by remember(item.id) { mutableStateOf(false) }
+    // Leaving without posting takes the photos back out of the gallery.
+    DisposableEffect(item.id) {
+        onDispose { if (!postedNow) Thread { if (Album.product(ctx) == item.id) Album.clear(ctx) }.start() }
+    }
     val wait = rememberWait()
 
     LaunchedEffect(item.id) {
@@ -173,7 +185,7 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                     itemsIndexed(item.pics) { i, pic ->
                         AsyncImage(
                             Midox.photo(pic), null, contentScale = ContentScale.Crop,
-                            modifier = Modifier.enter(i, rise = 30.dp).size(if (item.pics.size == 1) 350.dp else 230.dp, 220.dp).clip(Corners.Big).background(C.tonal)
+                            modifier = Modifier.enter(i, rise = 30.dp, key = pic).size(if (item.pics.size == 1) 350.dp else 230.dp, 220.dp).clip(Corners.Big).background(C.tonal)
                         )
                     }
                 }
@@ -202,7 +214,7 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                     val done = label in copied
                     val border by animateColorAsState(if (done) C.good else Color.Transparent, tween(Motion.QUICK), label = "copyBorder")
                     Row(
-                        Modifier.enter(i + 2).fillMaxWidth().tap { copy(ctx, label, value); haptics.tick(); copied = copied + label }
+                        Modifier.enter(i + 2).fillMaxWidth().tap { copy(ctx, label, value); haptics.tick(); copiedText = (copied + label).joinToString("|") }
                             .clip(Corners.Card).background(C.card).border(2.dp, border, Corners.Card)
                             .heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -229,7 +241,11 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
             // The two dropdowns copy can't fill: what to pick.
             Label("Then pick in Facebook")
             Row(Modifier.padding(horizontal = 20.dp).enter(5), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Hint("Catégorie", Posts.category(item), Modifier.weight(1f))
+                // Your own word for it wins: tap to set Facebook's category for this whole Midox category.
+                var editing by remember { mutableStateOf(false) }
+                val cat = Store.fbCategory(ctx, item.cat) ?: Posts.category(item)
+                Hint("Catégorie · tap to change", cat, Modifier.weight(1f).clickableRole { editing = true })
+                if (editing) CategoryDialog(item.cat.ifBlank { "this kind" }, cat, onDismiss = { editing = false }) { Store.setFbCategory(ctx, item.cat, it); editing = false }
                 Hint("État", Posts.condition(item), Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
@@ -247,16 +263,34 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                 // 10 minutes between posts: copy everything meanwhile, Marketplace opens when it's time.
                 if (!o && wait > 0) BigButton("Ready in ${mmss(wait)} · copy meanwhile", color = C.tonal, textColor = C.muted) { haptics.tick() }
                 else if (!o) BigButton("Open Marketplace", arrow = true) { opened = true; openMarketplace(ctx) }
-                else BigButton("I posted it", color = C.good) { haptics.done(); posted(ctx, item); onPosted() }
+                else BigButton("I posted it", color = C.good) { haptics.done(); postedNow = true; posted(ctx, item); onPosted() }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (opened) SoftButton("Open again", Modifier.weight(1f)) { openMarketplace(ctx) }
-                else SoftButton("Skip this one", Modifier.weight(1f)) { Album.clear(ctx); onSkip() }
-                if (!opened && Store.message(ctx).isBlank()) SoftButton("New wording", Modifier.weight(1f)) { Store.nextWording(ctx, item.id); copied = copied - "Description" }
-                if (opened) SoftButton("I posted it", Modifier.weight(1f)) { haptics.done(); posted(ctx, item); onPosted() }
+                else SoftButton("Skip this one", Modifier.weight(1f)) { onSkip() }
+                if (!opened && Store.message(ctx).isBlank()) SoftButton("New wording", Modifier.weight(1f)) { Store.nextWording(ctx, item.id); copiedText = (copied - "Description").joinToString("|") }
+                if (opened) SoftButton("I posted it", Modifier.weight(1f)) { haptics.done(); postedNow = true; posted(ctx, item); onPosted() }
             }
         }
     }
+}
+
+@Composable
+private fun CategoryDialog(midoxCat: String, current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf(current) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Facebook category", fontFamily = Display, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Type it as Facebook shows it. Used for every product in \"$midoxCat\".", fontSize = 14.sp, color = C.muted)
+                OutlinedTextField(text, { text = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = { TextButton({ onSave(text) }) { Text("Save", color = C.accentText, fontWeight = FontWeight.Bold) } },
+        dismissButton = { TextButton(onDismiss) { Text("Cancel", color = C.muted) } },
+        containerColor = C.card
+    )
 }
 
 @Composable

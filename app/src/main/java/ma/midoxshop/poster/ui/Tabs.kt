@@ -36,6 +36,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -118,7 +119,7 @@ fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
                 }
                 itemsIndexed(list, key = { _, p -> day + p.id }) { i, p ->
                     val done = data.posted[p.id] == day
-                    Box(Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i).animateItem()) {
+                    Box(Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i, key = day + p.id).animateItem()) {
                         ItemRow(
                             p,
                             when {
@@ -154,12 +155,15 @@ fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
 @Composable
 fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
     val ctx = LocalContext.current
-    var seg by rememberSaveable { mutableIntStateOf(1) }
+    val haptics = rememberHaptics()
     val byId = data.items?.associateBy { it.id }.orEmpty()
     val rows = data.posted.entries.sortedByDescending { it.value }.mapNotNull { (id, d) -> byId[id]?.let { it to d } }
     val live = rows.filter { it.first.id !in data.sold && Days.between(it.second, data.today) < Posts.REST_DAYS }
     val due = rows.filter { it.first.id !in data.sold && Days.between(it.second, data.today) >= Posts.REST_DAYS && it.first.available }
-    val sold = data.sold.mapNotNull { byId[it] }.map { it to (data.posted[it.id] ?: "") }
+    // Sold: every mark, newest first, with the day it was sold.
+    val sold = data.soldMarks.entries.sortedByDescending { it.value }.mapNotNull { (id, d) -> byId[id]?.let { it to d } }
+    // Opens on the list that needs you: what's due, else what's live, else sold.
+    var seg by rememberSaveable { mutableIntStateOf(if (due.isNotEmpty()) 1 else if (live.isNotEmpty()) 0 else if (sold.isNotEmpty()) 2 else 1) }
 
     Column(Modifier.fillMaxSize()) {
         Title("Posted")
@@ -194,14 +198,21 @@ fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
                 }
                 itemsIndexed(shown, key = { _, r -> "$s" + r.first.id }) { i, (p, d) ->
                     Column(
-                        Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i).animateItem().fillMaxWidth()
+                        Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i, key = "$s" + p.id).animateItem().fillMaxWidth()
                             .clip(Corners.Card).background(C.card).padding(bottom = 14.dp)
                     ) {
                         val asked = data.interest[p.id] ?: 0
                         ItemRow(
                             p,
-                            (if (d.isBlank()) "Sold" else "Posted " + Days.ago(d, data.today) + if (s == 1) " · getting buried" else "") +
-                                if (asked > 0) " · $asked message" + (if (asked > 1) "s" else "") else "",
+                            when (s) {
+                                2 -> "Sold " + Days.ago(d, data.today) + " · " + when {
+                                    p.cond == "Used" -> "one of a kind, gone"
+                                    p.id in data.sold -> "back in picks in ${Posts.REST_DAYS - Days.between(d, data.today)} days"
+                                    else -> "back in the picks"
+                                }
+                                else -> "Posted " + Days.ago(d, data.today) + (if (s == 1) " · getting buried" else "") +
+                                    if (asked > 0) " · $asked message" + (if (asked > 1) "s" else "") else ""
+                            },
                             subColor = if (s == 1) C.accentInk else C.muted
                         )
                         Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -216,7 +227,12 @@ fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
                                 }
                                 // A buyer wrote about it: one tap, and it comes back first when it's due.
                                 else -> {
-                                    SmallAction("Got messages", Modifier.weight(1f)) { Store.addInterest(ctx, p.id) }
+                                    // Counted once a day; tap again to undo a mistake.
+                                    val noted = Store.interestNotedToday(ctx, p.id)
+                                    SmallAction(if (noted) "Noted ✓ · undo" else "Got messages", Modifier.weight(1f), good = noted) {
+                                        haptics.tick()
+                                        if (noted) Store.undoInterest(ctx, p.id) else Store.addInterest(ctx, p.id)
+                                    }
                                     SmallAction("Mark sold", Modifier.weight(1f)) { Store.setSold(ctx, p.id, true) }
                                 }
                             }
@@ -229,11 +245,16 @@ fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
 }
 
 @Composable
-private fun SmallAction(text: String, modifier: Modifier, main: Boolean = false, onClick: () -> Unit) {
+private fun SmallAction(text: String, modifier: Modifier, main: Boolean = false, good: Boolean = false, onClick: () -> Unit) {
+    val bg by animateColorAsState(if (main) C.accent else if (good) C.goodSoft else C.ground, tween(Motion.QUICK), label = "act")
     Box(
-        modifier.heightIn(min = 46.dp).tap(onClick = onClick).clip(Corners.Small).background(if (main) C.accent else C.ground),
+        modifier.heightIn(min = 46.dp).tap(onClick = onClick).clip(Corners.Small).background(bg),
         contentAlignment = Alignment.Center
-    ) { Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = if (main) C.onAccent else C.ink) }
+    ) {
+        AnimatedContent(text, label = "actText", transitionSpec = { fadeIn(tween(Motion.QUICK)) togetherWith fadeOut(tween(Motion.QUICK / 2)) }) {
+            FitText(it, if (main) C.onAccent else if (good) C.good else C.ink, 14f, family = Body)
+        }
+    }
 }
 
 @Composable
@@ -242,6 +263,15 @@ fun SettingsScreen(data: Data) {
     @Suppress("UNUSED_VARIABLE") val changes = Store.changes
     var footer by remember { mutableStateOf(Store.footer(ctx)) }
     var message by remember { mutableStateOf(Store.message(ctx)) }
+    // Saved 0.6 s after you stop typing (and when you leave), not on every letter.
+    LaunchedEffect(message) { kotlinx.coroutines.delay(600); if (message.trim() != Store.message(ctx)) Store.setMessage(ctx, message) }
+    LaunchedEffect(footer) { kotlinx.coroutines.delay(600); if (footer.trim() != Store.footer(ctx)) Store.setFooter(ctx, footer) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            if (message.trim() != Store.message(ctx)) Store.setMessage(ctx, message)
+            if (footer.trim() != Store.footer(ctx)) Store.setFooter(ctx, footer)
+        }
+    }
     val reschedule = { Nag.schedule(ctx); Widget.update(ctx) }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
@@ -303,11 +333,11 @@ fun SettingsScreen(data: Data) {
         SettingsCard(4) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
-                    message, { message = it; Store.setMessage(ctx, it) }, modifier = Modifier.fillMaxWidth(),
+                    message, { message = it }, modifier = Modifier.fillMaxWidth(),
                     label = { Text("Your own words (empty: 10 endings that rotate)") }, minLines = 2
                 )
                 OutlinedTextField(
-                    footer, { footer = it; Store.setFooter(ctx, it) }, modifier = Modifier.fillMaxWidth(),
+                    footer, { footer = it }, modifier = Modifier.fillMaxWidth(),
                     label = { Text("Last line of every post (optional)") }
                 )
                 Text("Price on the listing: always ${Posts.LISTING_PRICE} DH, never in the text. No shop name.", fontSize = 13.sp, color = C.muted)

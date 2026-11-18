@@ -135,6 +135,21 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onDestroy() { stopNoise(); super.onDestroy() }
 
+    /**
+     * The next alarm while this one is still on screen (left there, not answered): ring again from the
+     * start, with new words.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        stopNoise()
+        startNoise()
+        round.intValue++
+    }
+
+    /** Bumped by each new alarm, so the screen picks new words and fades in again. */
+    private val round = androidx.compose.runtime.mutableIntStateOf(0)
+
     private fun finishWith(after: () -> Unit) {
         stopNoise()
         NotificationManagerCompat.from(this).cancel(Nag.NOTE_ID)
@@ -148,12 +163,13 @@ class AlarmActivity : ComponentActivity() {
     @Composable
     private fun AlarmScreen(test: Boolean) {
         val day = Days.today()
-        val n = remember { if (test) 0 else Store.nagNumber(this) }
+        val r = round.intValue
+        val n = remember(r) { if (test) 0 else Store.nagNumber(this) }
         val tints = listOf(Color(0xFFEA580C), Color(0xFFDB2777), Color(0xFF7C3AED), Color(0xFF0891B2), Color(0xFFCA8A04))
         val tint = tints[Math.floorMod(day.hashCode() + n, tints.size)]
         var pausing by remember { mutableStateOf(false) }
-        var started by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) { started = true }
+        var started by remember(r) { mutableStateOf(false) }
+        LaunchedEffect(r) { started = true }
         // With "Start soft" the glow fades in over the first 10 seconds too.
         val fade by androidx.compose.animation.core.animateFloatAsState(
             if (started) 1f else (if (Store.soft(this)) 0.25f else 1f), tween(10_000, easing = LinearEasing), label = "fade"
@@ -165,7 +181,7 @@ class AlarmActivity : ComponentActivity() {
         val snoozes = Store.snoozesLeft(this)
 
         // Two minutes of ringing, then it goes quiet (the next one comes in half an hour).
-        LaunchedEffect(Unit) { delay(120_000); stopNoise() }
+        LaunchedEffect(r) { delay(120_000); stopNoise() }
 
         Box(
             Modifier.fillMaxSize().background(C.viewer)

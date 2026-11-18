@@ -1,0 +1,85 @@
+name: Screen check
+
+# Runs by hand, and by itself on every push to a work branch (not main, not its own results).
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main, check-results]
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Enable KVM for the emulator
+        run: |
+          mkdir -p shots
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -la /dev/kvm > shots/kvm.txt 2>&1 || true
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/node_modules /opt/hostedtoolcache/CodeQL || true
+          df -h $HOME > shots/disk.txt 2>&1
+
+      - name: Build the test version
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleDebug 2>&1 | tee shots/build.txt | grep -E "^e: |error:|FAILED|BUILD" || true
+          test -f app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Start an emulator
+        run: |
+          SDKM=$ANDROID_HOME/cmdline-tools/latest/bin
+          export ANDROID_AVD_HOME=$HOME/.android/avd
+          mkdir -p $ANDROID_AVD_HOME
+          yes | $SDKM/sdkmanager --licenses > /dev/null 2>&1 || true
+          $SDKM/sdkmanager "system-images;android-34;google_apis;x86_64" "emulator" "platform-tools" > shots/sdk.txt 2>&1
+          echo no | $SDKM/avdmanager create avd -n check -k "system-images;android-34;google_apis;x86_64" -d pixel_6 > shots/avd.txt 2>&1
+          sed -i '/disk.dataPartition.size/d' $ANDROID_AVD_HOME/check.avd/config.ini
+          echo "disk.dataPartition.size=2G" >> $ANDROID_AVD_HOME/check.avd/config.ini
+          echo "hw.cpu.ncore=2" >> $ANDROID_AVD_HOME/check.avd/config.ini
+          $ANDROID_HOME/emulator/emulator -list-avds >> shots/avd.txt 2>&1
+          df -h $HOME >> shots/avd.txt 2>&1
+          nohup $ANDROID_HOME/emulator/emulator -avd check -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -camera-front none > shots/emulator.txt 2>&1 &
+          export PATH=$ANDROID_HOME/platform-tools:$PATH
+          timeout 120 adb wait-for-device || true
+          for i in $(seq 1 120); do
+            [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
+            sleep 5
+          done
+          adb shell getprop sys.boot_completed > shots/boot.txt 2>&1 || true
+          sleep 10
+
+      - name: Take screenshots
+        timeout-minutes: 45
+        run: |
+          export PATH=$ANDROID_HOME/platform-tools:$PATH
+          bash .github/selftest.sh > shots/script.txt 2>&1 || true
+
+      - name: Save results to the check-results branch
+        if: always()
+        run: |
+          cp $ANDROID_HOME/../.android/avd/*.log shots/ 2>/dev/null || true
+          cd shots
+          git init -q
+          git checkout -q -b check-results
+          git add -A
+          git -c user.name=check -c user.email=check@localhost commit -q -m "Screen check results"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" check-results

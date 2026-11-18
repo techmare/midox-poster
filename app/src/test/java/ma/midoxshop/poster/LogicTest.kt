@@ -103,4 +103,11 @@ class LogicTest {
         assertEquals("Neuf", Posts.condition(item("a")))
         assertEquals("D'occasion – bon état", Posts.condition(item("a").copy(cond = "Used")))
     }
+
+    @Test fun soldNewComesBackSoldUsedDoesNot() {
+        val items = listOf(item("n"), item("u").copy(cond = "Used"))
+        val sold = mapOf("n" to "2026-11-01", "u" to "2026-11-01")
+        assertEquals(setOf("n", "u"), Posts.stillSold(items, sold, "2026-11-10"))
+        assertEquals(setOf("u"), Posts.stillSold(items, sold, "2026-11-20"))
+    }
 }

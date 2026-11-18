@@ -2,6 +2,26 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.6: Everything from the review, fixed · 18 Nov 2026
+
+- **Never a blank screen at start:** if Android skips the splash, the screens show anyway after 2.5 s.
+- **No "Open Midox" flash at start:** Today says "Getting your products…" while Midox answers.
+- **No more cut-off buttons:** long labels shrink to fit, and the long ones are shorter.
+- **The alarm rings again** when the next one comes while the last is still on screen.
+- **Photos leave the gallery** when you close a post without posting.
+- **"Mark sold" is smarter:** a used item is gone for good; a new model comes back to the picks 14 days later, if Midox still has it.
+- **"Got messages" shows "Noted ✓"**, counts once a day, and a second tap undoes it.
+- **"Next post is ready" goes away** once you post.
+- **Rows animate once per visit**, not every time you scroll back.
+- **Posted opens on the list that has something.**
+- **Streak freezes left this week** show on Today.
+- **Today moves to the new day at midnight**, even with the app open.
+- **Switches say "on" / "off"** to TalkBack.
+- **Typing your words in Settings no longer lags:** saved when you stop typing.
+- **Post mode remembers you opened Facebook**, even if Android closed Poster meanwhile.
+- **Facebook category per Midox category:** tap Catégorie in post mode and type it as Facebook shows it, once for all lenses, all bags…
+- **The right fix when Poster can't read Midox:** install Midox, update it, or reinstall Poster (when Poster was installed first).
+
 ## 1.0.5: Faster posts, smarter picks · 18 Nov 2026
 
 - **What to pick in Facebook's dropdowns.** Under the copy buttons, post mode shows the Catégorie and the État (Neuf, D'occasion – bon état…) to choose, so there's nothing left to think about.

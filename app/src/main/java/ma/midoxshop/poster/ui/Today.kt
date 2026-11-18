@@ -132,16 +132,26 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
                     Ring(data.doneToday, data.goal, 76.dp, 8.dp)
                 }
                 when {
+                    data.loading -> BigButton("Getting your products…", color = C.heroTrack, textColor = C.heroMuted, onClick = {})
                     data.items == null -> BigButton("Open Midox", arrow = true, onClick = { Midox.open(ctx) })
-                    allDone -> BigButton("All of today's posts are up", color = C.good, onClick = onQueue)
-                    next == null -> BigButton("Nothing to post · see the queue", color = C.heroTrack, onClick = onQueue)
+                    allDone -> BigButton("All posted today", color = C.good, onClick = onQueue)
+                    next == null -> BigButton("Nothing to post today", color = C.heroTrack, onClick = onQueue)
                     // Posts are spaced 10 minutes apart; you can still open the next one and get it ready.
                     wait > 0 -> BigButton("Next post in ${mmss(wait)}", color = C.heroTrack, onClick = onStart)
                     else -> BigButton("Start posting", arrow = true, onClick = onStart)
                 }
-                if (next != null && data.items != null) Text(
+                if (!data.loading && next != null && data.items != null) Text(
                     if (wait > 0) "Spacing your posts so Facebook sees no burst" else "About 2 min a post · everything is ready", fontSize = 13.sp, color = C.heroMuted,
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 0.dp)
+                )
+                // The streak's safety net, so a missed day never feels like a trick.
+                if (Store.freezes(ctx) > 0 && !data.loading) Text(
+                    when (streak.freezesLeft) {
+                        0 -> "No streak freezes left this week"
+                        1 -> "1 streak freeze left this week"
+                        else -> "${streak.freezesLeft} streak freezes left this week"
+                    },
+                    fontSize = 12.sp, color = C.heroMuted, modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
                 if (paused != null) Text(
                     "Resume today", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.glow,
@@ -161,7 +171,7 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
             itemsIndexed(data.picks, key = { _, p -> p.id }) { i, p ->
                 val done = data.posted[p.id] == data.today
                 val last = data.posted[p.id]
-                Box(Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i + 2).animateItem()) {
+                Box(Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i + 2, key = p.id).animateItem()) {
                     ItemRow(
                         p,
                         when {
@@ -203,10 +213,13 @@ fun SetupCard(data: Data) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val changes = Store.changes
     val missing = buildList {
-        if (data.items == null) add(Triple(
-            if (Midox.installed(ctx)) "Update Midox" else "Install Midox",
-            "Poster reads your products and photos from Midox."
-        ) { Midox.open(ctx) })
+        if (data.items == null && !data.loading) when (Midox.problem(ctx)) {
+            Midox.Problem.NOT_INSTALLED -> add(Triple("Install Midox", "Poster reads your products and photos from Midox.") { Midox.open(ctx) })
+            Midox.Problem.REINSTALL_POSTER -> add(Triple(
+                "Reinstall Poster", "Poster was installed before Midox, so Android won't let it read Midox. Uninstall Poster and install it again (Poster's own history starts over)."
+            ) { ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName))) })
+            Midox.Problem.UPDATE_MIDOX -> add(Triple("Update Midox", "This Midox is too old to share its products with Poster.") { Midox.open(ctx) })
+        }
         if (!Nag.canNotify(ctx)) add(Triple("Allow notifications", "For the reminders.") { openAppSettings(ctx) })
         if (!Nag.canOverlay(ctx)) add(Triple("Allow \"Display over other apps\"", "So the alarm can cover the screen over any app.") {
             ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + ctx.packageName)))

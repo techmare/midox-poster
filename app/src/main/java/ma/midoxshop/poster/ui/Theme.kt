@@ -62,6 +62,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -236,7 +238,16 @@ object Launch {
  * Rises and fades in when it first appears, [index] steps after the first one: lists come in one row
  * after the other instead of all at once.
  */
-fun Modifier.enter(index: Int = 0, rise: Dp = 18.dp): Modifier = composed {
+val LocalEnterSeen = staticCompositionLocalOf<MutableSet<Any>?> { null }
+
+/**
+ * [key]: a list row's id. A row that already came in during this visit to the screen shows straight
+ * away when it scrolls back into view, instead of playing its entrance again.
+ */
+fun Modifier.enter(index: Int = 0, rise: Dp = 18.dp, key: Any? = null): Modifier = composed {
+    val seen = LocalEnterSeen.current
+    val already = remember { key != null && seen != null && !seen.add(key) }
+    if (already) return@composed this
     val alpha = remember { Animatable(0f) }
     val y = remember { Animatable(1f) }
     val px = with(LocalDensity.current) { rise.toPx() }
@@ -377,9 +388,25 @@ fun BigButton(
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth().height(height).tap(onClick = onClick).clip(Corners.Card).background(bg).padding(horizontal = 16.dp)
     ) {
-        Text(text, color = textColor, fontFamily = Display, fontSize = if (height >= 60.dp) 19.sp else 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
+        FitText(text, textColor, if (height >= 60.dp) 19f else 16f, Modifier.weight(1f, fill = false))
         if (arrow) Icon(Icons.Arrow, textColor, 20.dp)
     }
+}
+
+/**
+ * One line that never gets cut: when the words don't fit, the size steps down (to 13sp at the least),
+ * then "…" as a last resort.
+ */
+@Composable
+fun FitText(text: String, color: Color, maxSp: Float, modifier: Modifier = Modifier, family: FontFamily = Display, weight: FontWeight = FontWeight.Bold) {
+    var size by remember(text, maxSp) { mutableStateOf(maxSp) }
+    var ready by remember(text, maxSp) { mutableStateOf(false) }
+    Text(
+        text, color = color, fontFamily = family, fontWeight = weight, fontSize = size.sp, textAlign = TextAlign.Center,
+        maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+        modifier = modifier.drawWithContent { if (ready) drawContent() },
+        onTextLayout = { r -> if ((r.didOverflowWidth || r.hasVisualOverflow) && size > 13f) size -= 1f else ready = true }
+    )
 }
 
 /** White, for everything that isn't the main action. */
@@ -388,7 +415,7 @@ fun SoftButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit)
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier.fillMaxWidth().height(52.dp).tap(onClick = onClick).clip(Corners.Card).background(C.card).padding(horizontal = 12.dp)
-    ) { Text(text, color = C.ink, fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
+    ) { FitText(text, C.ink, 15f, family = Body, weight = FontWeight.SemiBold) }
 }
 
 /** A small dark (light at night) button for a card's own action. */
@@ -464,7 +491,9 @@ fun Toggle(on: Boolean, onChange: (Boolean) -> Unit) {
     val x by animateDpAsState(if (on) 22.dp else 0.dp, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium), label = "knob")
     val bg by animateColorAsState(if (on) C.accent else C.line, tween(Motion.QUICK), label = "track")
     Box(
-        Modifier.size(52.dp, 30.dp).clip(Corners.Pill).background(bg).clickable(role = Role.Switch) { h.toggle(!on); onChange(!on) }.padding(3.dp)
+        // toggleable, so TalkBack says "on" or "off".
+        Modifier.size(52.dp, 30.dp).clip(Corners.Pill).background(bg)
+            .toggleable(value = on, role = Role.Switch) { h.toggle(it); onChange(it) }.padding(3.dp)
     ) { Box(Modifier.offset(x = x).size(24.dp).clip(Corners.Pill).background(Color.White)) }
 }
 

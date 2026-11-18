@@ -52,6 +52,16 @@ object Posts {
     /** The price typed on Marketplace: always 1 dh (0 shows as "Free"). Buyers ask for the real one. */
     const val LISTING_PRICE = "1"
 
+    /**
+     * Which "sold" marks still hide a product. A used one is one of a kind: once sold, it's gone. A new
+     * one is a model the shop restocks: it comes back to the picks [REST_DAYS] days after you sold one,
+     * while Midox still has it.
+     */
+    fun stillSold(items: List<Item>, sold: Map<String, String>, today: String): Set<String> {
+        val byId = items.associateBy { it.id }
+        return sold.filter { (id, day) -> byId[id]?.cond == "Used" || Days.between(day, today) < REST_DAYS }.keys
+    }
+
     /** Can go on Marketplace: a name, a price, not sold out, and not marked sold here. */
     fun postable(items: List<Item>, sold: Set<String>): List<Item> =
         items.filter { it.name.isNotBlank() && it.price != null && it.available && it.id !in sold }

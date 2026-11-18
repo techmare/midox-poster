@@ -71,6 +71,7 @@ object Nag {
     /** Posted or paused: take any nag off the screen and set tomorrow's. */
     fun calmDown(ctx: Context) {
         NotificationManagerCompat.from(ctx).cancel(NOTE_ID)
+        NotificationManagerCompat.from(ctx).cancel(READY_ID)   // "Next post is ready" is answered
         schedule(ctx)
         scheduleReady(ctx)
     }

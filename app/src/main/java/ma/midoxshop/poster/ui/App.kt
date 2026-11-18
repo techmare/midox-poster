@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import ma.midoxshop.poster.Days
 import ma.midoxshop.poster.Item
@@ -67,11 +68,17 @@ import ma.midoxshop.poster.Posts
 import ma.midoxshop.poster.Store
 import ma.midoxshop.poster.Widget
 
-/** What the screens need from Midox and from Poster's own notes, read again on every change. */
-class Data(val items: List<Item>?, ctx: Context) {
+/**
+ * What the screens need from Midox and from Poster's own notes, read again on every change.
+ * [loading]: Midox hasn't answered yet (not the same as Midox missing: nothing to fix, just wait).
+ */
+class Data(val items: List<Item>?, ctx: Context, val loading: Boolean = false) {
     val today = Days.today()
     val posted = Store.posted(ctx)
-    val sold = Store.sold(ctx)
+    /** Every "sold" mark, with its day (the Posted tab's Sold list). */
+    val soldMarks = Store.sold(ctx)
+    /** The marks that still hide a product: used ones for good, new ones for 14 days. */
+    val sold: Set<String> = items?.let { Posts.stillSold(it, soldMarks, today) } ?: soldMarks.keys
     val skips = Store.skips(ctx)
     val interest = Store.interest(ctx)
     val goal = Store.goal(ctx)
@@ -103,12 +110,24 @@ fun LaunchSettle(content: @Composable () -> Unit) {
 fun App(request: MutableState<String?>, resumed: Int) {
     val ctx = LocalContext.current
     val changes = Store.changes
+    // Loaded once at the start and again each time you come back; while the first load runs, the
+    // screens show "loading", not "Midox is missing".
+    var loaded by remember { mutableStateOf(false) }
     val items by produceState<List<Item>?>(initialValue = null, resumed) {
         value = withContext(Dispatchers.IO) { Midox.items(ctx) }
+        loaded = true
         // The first time Midox lets us in: take over its Marketplace history and words.
         if (value != null && !Store.imported(ctx)) withContext(Dispatchers.IO) { Midox.market(ctx) }?.let { Store.importFromMidox(ctx, it) }
     }
-    val data = remember(items, changes) { Data(items, ctx) }
+    // A new day at midnight, even with the app open: Today, the ring and the picks move on.
+    var day by remember { mutableStateOf(Days.today()) }
+    LaunchedEffect(day) {
+        val now = java.time.LocalDateTime.now()
+        val midnight = now.toLocalDate().plusDays(1).atStartOfDay()
+        delay(java.time.Duration.between(now, midnight).toMillis() + 1000)
+        day = Days.today()
+    }
+    val data = remember(items, changes, day, loaded) { Data(items, ctx, loading = !loaded) }
     LaunchedEffect(data) { Widget.update(ctx) }
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -142,6 +161,8 @@ fun App(request: MutableState<String?>, resumed: Int) {
             transitionSpec = { move(initialState, targetState) },
             label = "place"
         ) { p ->
+          // Each visit remembers which rows have played their entrance, so scrolling doesn't replay it.
+          androidx.compose.runtime.CompositionLocalProvider(LocalEnterSeen provides remember { mutableSetOf<Any>() }) {
             when (p) {
                 is DonePlace -> {
                     BackHandler { done = null }
@@ -165,6 +186,7 @@ fun App(request: MutableState<String?>, resumed: Int) {
                     }
                 }
             }
+          }
         }
         // The bar slides away in post mode and on the Done screen, and back after.
         AnimatedVisibility(

@@ -26,11 +26,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Nag.channels(this)
+        // Screen check (debug builds only): sample products instead of Midox's.
+        if (BuildConfig.DEBUG) {
+            val prefs = getSharedPreferences("poster", MODE_PRIVATE)
+            if (intent?.hasExtra("demo") == true) prefs.edit().putBoolean("demo", intent.getBooleanExtra("demo", false)).apply()
+            Midox.demo = prefs.getBoolean("demo", false)
+        }
         // The opening animation plays when Poster is opened from its icon: not from a nag, the widget or
         // Midox, and not again after turning the phone (Android 12 and up, where the splash shows the ring).
         val opening = Build.VERSION.SDK_INT >= 31 && savedInstanceState == null && intent?.action == Intent.ACTION_MAIN &&
             !intent.hasExtra("go") && !intent.hasExtra("pid")
         Launch.ready = !opening
+        // Safety: if Android never hands the splash over (some launchers, a restart after a crash),
+        // the screens would wait for the opening forever. After 2.5 s they come in anyway.
+        if (opening) android.os.Handler(mainLooper).postDelayed({ Launch.ready = true }, 2500)
         if (opening && Build.VERSION.SDK_INT >= 31) {
             // On a very slow start Android shows the app before handing the splash over: then skip it.
             var firstFrame = 0L

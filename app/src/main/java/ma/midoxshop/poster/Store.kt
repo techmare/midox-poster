@@ -67,7 +67,8 @@ object Store {
     }
 
     /** Sold on Marketplace: no longer suggested. */
-    fun sold(ctx: Context): Set<String> = map(ctx, "sold").keys
+    /** Products marked sold here, and the day. [Posts.stillSold] says which still hide a product. */
+    fun sold(ctx: Context): Map<String, String> = map(ctx, "sold")
     fun setSold(ctx: Context, pid: String, on: Boolean) {
         val m = map(ctx, "sold").toMutableMap()
         if (on) m[pid] = Days.today() else m.remove(pid)
@@ -76,10 +77,29 @@ object Store {
 
     /** How many times buyers messaged about each product ("Got messages" in Posted). */
     fun interest(ctx: Context): Map<String, Int> = map(ctx, "interest").mapValues { it.value.toIntOrNull() ?: 0 }
+    /** Counted once a day per product, so a double tap doesn't tilt the picks. */
+    fun interestNotedToday(ctx: Context, pid: String): Boolean = map(ctx, "interest_day")[pid] == Days.today()
     fun addInterest(ctx: Context, pid: String) {
+        if (interestNotedToday(ctx, pid)) return
         val m = interest(ctx).toMutableMap()
         m[pid] = (m[pid] ?: 0) + 1
         putMap(ctx, "interest", m.mapValues { it.value.toString() })
+        putMap(ctx, "interest_day", map(ctx, "interest_day").filterValues { it == Days.today() } + (pid to Days.today()))
+    }
+    fun undoInterest(ctx: Context, pid: String) {
+        if (!interestNotedToday(ctx, pid)) return
+        val m = interest(ctx).toMutableMap()
+        m[pid] = ((m[pid] ?: 1) - 1).coerceAtLeast(0)
+        putMap(ctx, "interest", m.filterValues { it > 0 }.mapValues { it.value.toString() })
+        putMap(ctx, "interest_day", map(ctx, "interest_day") - pid)
+    }
+
+    /** Facebook's category for each of Midox's categories, as you set it in post mode. */
+    fun fbCategory(ctx: Context, midoxCat: String): String? = map(ctx, "fb_cat")[midoxCat.lowercase()]
+    fun setFbCategory(ctx: Context, midoxCat: String, fb: String) {
+        val m = map(ctx, "fb_cat").toMutableMap()
+        if (fb.isBlank()) m.remove(midoxCat.lowercase()) else m[midoxCat.lowercase()] = fb.trim()
+        putMap(ctx, "fb_cat", m)
     }
 
     /** Products you swapped away, per day. */
