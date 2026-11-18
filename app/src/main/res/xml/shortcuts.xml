@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press Poster's icon: straight into post mode, like the widget's button. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_post"
+        android:shortcutId="post"
+        android:shortcutShortLabel="@string/sc_post">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="ma.midoxshop.poster.MainActivity"
+            android:targetPackage="ma.midoxshop.poster">
+            <extra android:name="go" android:value="post" />
+        </intent>
+    </shortcut>
+</shortcuts>

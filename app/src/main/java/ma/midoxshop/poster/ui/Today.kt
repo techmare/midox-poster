@@ -121,6 +121,7 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
                                 paused != null -> "Paused today: ${paused.lowercase()}. Your streak is safe."
                                 data.doneToday >= data.goal -> "Great day. You're done."
                                 data.doneToday >= data.min -> "Streak saved. The rest is a bonus."
+                                streak.days == 0 && Store.counts(ctx).isNotEmpty() -> "Fresh start. Just 1 today and you're back."
                                 data.min == 1 -> "1 post keeps your streak. ${data.goal} is a great day."
                                 else -> "${data.min} posts keep your streak."
                             },

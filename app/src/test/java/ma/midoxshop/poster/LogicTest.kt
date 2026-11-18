@@ -85,4 +85,22 @@ class LogicTest {
         val items = (1..30).map { item("$it") }
         assertEquals(10, Posts.picks(items, emptyMap(), emptySet(), "2026-11-18", Posts.MAX_A_DAY).size)
     }
+
+    @Test fun productsWithMessagesComeFirst() {
+        val items = listOf(item("a"), item("b"), item("c"))
+        val posted = mapOf("a" to "2026-10-01", "b" to "2026-10-01", "c" to "2026-10-01")
+        val picks = Posts.picks(items, posted, emptySet(), "2026-11-18", 1, interest = mapOf("c" to 2))
+        assertEquals(listOf("c"), picks.map { it.id })
+    }
+
+    @Test fun morningNudgeComesFirst() {
+        val s = NagPlan.slots(19 * 60, true, 90, 30, 23 * 60, morning = 11 * 60)
+        assertEquals(NagPlan.Slot(11 * 60, 0), s.first())
+        assertEquals(NagPlan.Slot(19 * 60, 0), s[1])
+    }
+
+    @Test fun dropdownHintsInFrench() {
+        assertEquals("Neuf", Posts.condition(item("a")))
+        assertEquals("D'occasion – bon état", Posts.condition(item("a").copy(cond = "Used")))
+    }
 }

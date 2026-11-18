@@ -60,6 +60,7 @@ object Store {
         val m = posted(ctx).toMutableMap()
         if (m[pid] != day) return
         m.remove(pid); putMap(ctx, "posted", m)
+        p(ctx).edit().putLong("last_post_at", 0L).apply()   // no 10-minute wait for a post that didn't happen
         val c = counts(ctx).toMutableMap()
         c[day] = ((c[day] ?: 1) - 1).coerceAtLeast(0)
         putMap(ctx, "counts", c.mapValues { it.value.toString() })
@@ -71,6 +72,14 @@ object Store {
         val m = map(ctx, "sold").toMutableMap()
         if (on) m[pid] = Days.today() else m.remove(pid)
         putMap(ctx, "sold", m)
+    }
+
+    /** How many times buyers messaged about each product ("Got messages" in Posted). */
+    fun interest(ctx: Context): Map<String, Int> = map(ctx, "interest").mapValues { it.value.toIntOrNull() ?: 0 }
+    fun addInterest(ctx: Context, pid: String) {
+        val m = interest(ctx).toMutableMap()
+        m[pid] = (m[pid] ?: 0) + 1
+        putMap(ctx, "interest", m.mapValues { it.value.toString() })
     }
 
     /** Products you swapped away, per day. */
@@ -127,6 +136,9 @@ object Store {
 
     fun remindAt(ctx: Context) = p(ctx).getInt("remind_at", 19 * 60)
     fun setRemindAt(ctx: Context, m: Int) { p(ctx).edit().putInt("remind_at", m).apply(); bump() }
+    /** A quiet morning nudge (minutes of the day), or null when off. */
+    fun morningAt(ctx: Context): Int? = p(ctx).getInt("morning_at", -1).takeIf { it >= 0 }
+    fun setMorningAt(ctx: Context, m: Int?) { p(ctx).edit().putInt("morning_at", m ?: -1).apply(); bump() }
     fun nagsOn(ctx: Context) = p(ctx).getBoolean("nags", true)
     fun setNagsOn(ctx: Context, on: Boolean) { p(ctx).edit().putBoolean("nags", on).apply(); bump() }
     fun loud(ctx: Context) = p(ctx).getBoolean("loud", true)

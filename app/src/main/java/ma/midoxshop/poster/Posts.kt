@@ -60,7 +60,10 @@ object Posts {
      * [n] picks for [day]. [posted] is each product's last day posted; [skipped] the ones you swapped
      * away that day. Products already posted on [day] stay in the list (with a tick).
      */
-    fun picks(items: List<Item>, posted: Map<String, String>, sold: Set<String>, day: String, n: Int, skipped: Set<String> = emptySet()): List<Item> {
+    fun picks(
+        items: List<Item>, posted: Map<String, String>, sold: Set<String>, day: String, n: Int,
+        skipped: Set<String> = emptySet(), interest: Map<String, Int> = emptyMap()
+    ): List<Item> {
         val all = postable(items, sold)
         val today = all.filter { posted[it.id] == day }
         val rest = Days.shift(day, -REST_DAYS)
@@ -68,6 +71,8 @@ object Posts {
             .filter { it.id !in skipped && (posted[it.id] == null || posted[it.id]!! < rest) }
             .sortedWith(
                 compareBy<Item> { it.pics.isEmpty() }
+                    // What got messages last time sells: it comes back first.
+                    .thenByDescending { interest[it.id] ?: 0 }
                     .thenBy { posted[it.id] ?: "" }
                     .thenBy { (it.id + day).hashCode() }
             )
@@ -90,14 +95,29 @@ object Posts {
      * The next [days] days, starting with [from]: each day's picks as if you post every one of them,
      * so a product shows only once in the week.
      */
-    fun plan(items: List<Item>, posted: Map<String, String>, sold: Set<String>, from: String, n: Int, days: Int, skips: Map<String, Set<String>>): List<Pair<String, List<Item>>> {
+    fun plan(
+        items: List<Item>, posted: Map<String, String>, sold: Set<String>, from: String, n: Int, days: Int,
+        skips: Map<String, Set<String>>, interest: Map<String, Int> = emptyMap()
+    ): List<Pair<String, List<Item>>> {
         val p = posted.toMutableMap()
         return (0 until days).map { i ->
             val d = Days.shift(from, i)
-            val list = picks(items, p, sold, d, n, skips[d].orEmpty())
+            val list = picks(items, p, sold, d, n, skips[d].orEmpty(), interest)
             list.forEach { if (p[it.id] == null || p[it.id]!! < d) p[it.id] = d }
             d to list
         }
+    }
+
+    /**
+     * What to pick in the two dropdowns Facebook asks for (copy buttons can't fill those), in the words
+     * Facebook shows in French.
+     */
+    fun category(p: Item): String = "Électronique et ordinateurs"
+
+    fun condition(p: Item): String = when (p.cond) {
+        "New" -> "Neuf"
+        "Used" -> "D'occasion – bon état"
+        else -> "D'occasion – comme neuf"
     }
 
     private fun proName(p: Item): String = ProName.pro(p.name) ?: p.name
@@ -171,8 +191,10 @@ object Streak {
 object NagPlan {
     data class Slot(val minute: Int, val level: Int)
 
-    fun slots(remindAt: Int, loud: Boolean, alarmAfter: Int, every: Int, end: Int): List<Slot> {
+    fun slots(remindAt: Int, loud: Boolean, alarmAfter: Int, every: Int, end: Int, morning: Int? = null): List<Slot> {
         val out = mutableListOf(Slot(remindAt, 0))
+        // The day's first, quiet one: a moment you're already up and about (arriving at the shop…).
+        if (morning != null && morning < remindAt) out += Slot(morning, 0)
         if (remindAt + 45 < end) out += Slot(remindAt + 45, 1)
         var t = remindAt + (if (loud) alarmAfter else 90)
         while (t <= end) {

@@ -2,6 +2,15 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.5: Faster posts, smarter picks · 18 Nov 2026
+
+- **What to pick in Facebook's dropdowns.** Under the copy buttons, post mode shows the Catégorie and the État (Neuf, D'occasion – bon état…) to choose, so there's nothing left to think about.
+- **"Got messages"** on a live post in Posted: one tap when a buyer writes. Products that get messages come back first when they're due for a repost.
+- **Morning nudge** (Settings › Nudges): a quiet reminder at a moment you're already up, like arriving at the shop, before the evening ones.
+- **Long-press Poster's icon › Post 1 now**: straight into post mode, like the widget.
+- **Undo** on the Done screen, for a mistaken "I posted it".
+- **Fresh start**: after a missed streak, Today says "Just 1 today and you're back" instead of showing a zero.
+
 ## 1.0.4: Up to 10 a day, spaced out · 18 Nov 2026
 
 - **Good day can go up to 10 posts** (Settings › Daily goal). The minimum that keeps your streak stays as you set it.

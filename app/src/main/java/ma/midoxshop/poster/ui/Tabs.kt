@@ -64,7 +64,7 @@ import ma.midoxshop.poster.Widget
 fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
     val ctx = LocalContext.current
     val plan = remember(data) {
-        data.items?.let { Posts.plan(it, data.posted, data.sold, data.today, data.goal, 7, data.skips) }.orEmpty()
+        data.items?.let { Posts.plan(it, data.posted, data.sold, data.today, data.goal, 7, data.skips, data.interest) }.orEmpty()
     }
     var sel by rememberSaveable { mutableIntStateOf(0) }
     val haptics = rememberHaptics()
@@ -197,9 +197,11 @@ fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
                         Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i).animateItem().fillMaxWidth()
                             .clip(Corners.Card).background(C.card).padding(bottom = 14.dp)
                     ) {
+                        val asked = data.interest[p.id] ?: 0
                         ItemRow(
                             p,
-                            if (d.isBlank()) "Sold" else "Posted " + Days.ago(d, data.today) + if (s == 1) " · getting buried" else "",
+                            (if (d.isBlank()) "Sold" else "Posted " + Days.ago(d, data.today) + if (s == 1) " · getting buried" else "") +
+                                if (asked > 0) " · $asked message" + (if (asked > 1) "s" else "") else "",
                             subColor = if (s == 1) C.accentInk else C.muted
                         )
                         Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -212,7 +214,11 @@ fun PostedScreen(data: Data, onPost: (Item) -> Unit) {
                                     SmallAction("Repost now", Modifier.weight(1f), main = true) { onPost(p) }
                                     SmallAction("Mark sold", Modifier.weight(1f)) { Store.setSold(ctx, p.id, true) }
                                 }
-                                else -> SmallAction("Mark sold", Modifier.weight(1f)) { Store.setSold(ctx, p.id, true) }
+                                // A buyer wrote about it: one tap, and it comes back first when it's due.
+                                else -> {
+                                    SmallAction("Got messages", Modifier.weight(1f)) { Store.addInterest(ctx, p.id) }
+                                    SmallAction("Mark sold", Modifier.weight(1f)) { Store.setSold(ctx, p.id, true) }
+                                }
                             }
                         }
                     }
@@ -269,6 +275,20 @@ fun SettingsScreen(data: Data) {
                 Column {
                     SettingRow("Start soft", "quiet at first, louder over 30 seconds", divider = true) { Toggle(Store.soft(ctx)) { Store.setSoft(ctx, it) } }
                     ChipRow("Alarm starts after the reminder", listOf(30, 60, 90, 120).map { "+$it min" to it }, Store.alarmAfter(ctx)) { Store.setAlarmAfter(ctx, it); reschedule() }
+                }
+            }
+            SettingRow("Morning nudge", "a quiet one at a moment you're up anyway, like arriving at the shop", divider = Store.morningAt(ctx) != null) {
+                Toggle(Store.morningAt(ctx) != null) { Store.setMorningAt(ctx, if (it) 11 * 60 else null); reschedule() }
+            }
+            AnimatedVisibility(Store.morningAt(ctx) != null, enter = expandVertically(tween(Motion.SCREEN, easing = Motion.EaseOut)) + fadeIn(), exit = shrinkVertically(tween(Motion.QUICK)) + fadeOut()) {
+                SettingRow("Morning nudge at", null, divider = true) {
+                    val m = Store.morningAt(ctx) ?: (11 * 60)
+                    Text(
+                        hm(m), fontFamily = Display, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = C.ink,
+                        modifier = Modifier.tap {
+                            TimePickerDialog(ctx, { _, h, min -> Store.setMorningAt(ctx, (h * 60 + min).coerceAtMost(Store.remindAt(ctx) - 1)); reschedule() }, m / 60, m % 60, true).show()
+                        }.clip(Corners.Small).background(C.ground).padding(horizontal = 14.dp, vertical = 10.dp)
+                    )
                 }
             }
             ChipRow("Stop nagging at", listOf(22 * 60, 23 * 60, 23 * 60 + 59).map { hm(it) to it }, Store.endAt(ctx)) { Store.setEndAt(ctx, it); reschedule() }

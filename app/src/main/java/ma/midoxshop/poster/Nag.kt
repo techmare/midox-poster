@@ -42,7 +42,7 @@ object Nag {
     private fun doneToday(ctx: Context) = Store.postedToday(ctx) >= Store.min(ctx) || Store.pausedToday(ctx) != null
 
     private fun slots(ctx: Context) =
-        NagPlan.slots(Store.remindAt(ctx), Store.loud(ctx), Store.alarmAfter(ctx), Store.every(ctx), Store.endAt(ctx))
+        NagPlan.slots(Store.remindAt(ctx), Store.loud(ctx), Store.alarmAfter(ctx), Store.every(ctx), Store.endAt(ctx), Store.morningAt(ctx))
 
     private fun nowMinute(): Int = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
 

@@ -226,6 +226,12 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                     }
                 }
             }
+            // The two dropdowns copy can't fill: what to pick.
+            Label("Then pick in Facebook")
+            Row(Modifier.padding(horizontal = 20.dp).enter(5), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Hint("Catégorie", Posts.category(item), Modifier.weight(1f))
+                Hint("État", Posts.condition(item), Modifier.weight(1f))
+            }
             Spacer(Modifier.height(12.dp))
         }
 
@@ -253,9 +259,17 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
     }
 }
 
+@Composable
+private fun Hint(label: String, value: String, modifier: Modifier) {
+    Column(modifier.clip(Corners.Card).background(C.card).padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = C.muted)
+        Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.ink, lineHeight = 20.sp)
+    }
+}
+
 /** After a post: the check draws itself, the ring fills, then the words. Stopping is as fine as going on. */
 @Composable
-fun DoneScreen(data: Data, onNext: () -> Unit, onStop: () -> Unit) {
+fun DoneScreen(data: Data, postedId: String, onNext: () -> Unit, onStop: () -> Unit, onUndo: () -> Unit) {
     val ctx = LocalContext.current
     val streak = Store.streak(ctx)
     val secs = remember { Store.postSeconds(ctx) }
@@ -303,6 +317,13 @@ fun DoneScreen(data: Data, onNext: () -> Unit, onStop: () -> Unit) {
                 BigButton(if (wait > 0) "Next post in ${mmss(wait)} · get it ready" else "Keep going · next post", arrow = wait == 0L, onClick = onNext)
                 BigButton("I'm done for today", color = C.hero2, height = 56.dp, onClick = onStop)
             } else BigButton("Back to Today", onClick = onStop)
+            // Tapped "I posted it" by mistake: put it back as not posted.
+            Text(
+                "Undo, I didn't post it", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.heroMuted,
+                modifier = Modifier.align(Alignment.CenterHorizontally).clip(Corners.Small).clickableRole {
+                    Store.unmarkPosted(ctx, postedId); Nag.schedule(ctx); Widget.update(ctx); onUndo()
+                }.padding(12.dp)
+            )
         }
     }
 }

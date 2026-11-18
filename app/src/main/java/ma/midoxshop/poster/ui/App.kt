@@ -73,9 +73,10 @@ class Data(val items: List<Item>?, ctx: Context) {
     val posted = Store.posted(ctx)
     val sold = Store.sold(ctx)
     val skips = Store.skips(ctx)
+    val interest = Store.interest(ctx)
     val goal = Store.goal(ctx)
     val min = Store.min(ctx)
-    val picks: List<Item> = items?.let { Posts.picks(it, posted, sold, today, goal, skips[today].orEmpty()) }.orEmpty()
+    val picks: List<Item> = items?.let { Posts.picks(it, posted, sold, today, goal, skips[today].orEmpty(), interest) }.orEmpty()
     val doneToday = Store.postedToday(ctx)
     fun byId(id: String) = items?.firstOrNull { it.id == id }
     /** The next of today's picks not posted yet. */
@@ -144,7 +145,7 @@ fun App(request: MutableState<String?>, resumed: Int) {
             when (p) {
                 is DonePlace -> {
                     BackHandler { done = null }
-                    DoneScreen(data, onNext = { startPost(data.nextPick()) }, onStop = { done = null; tab = 0 })
+                    DoneScreen(data, p.id, onNext = { startPost(data.nextPick()) }, onStop = { done = null; tab = 0 }, onUndo = { done = null; posting = p.id })
                 }
                 is PostPlace -> {
                     val item = data.byId(p.id)

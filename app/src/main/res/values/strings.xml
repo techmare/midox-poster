@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Poster</string>
     <string name="w_desc">Today\'s Marketplace posts and your streak, with Post 1 now</string>
+    <string name="sc_post">Post 1 now</string>
+    <string name="sc_queue">See the week</string>
 </resources>
