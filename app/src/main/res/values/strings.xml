@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Poster</string>
+    <string name="w_desc">Today\'s Marketplace posts and your streak, with Post 1 now</string>
 </resources>

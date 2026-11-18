@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="icon_bg">#15171C</color>
-    <color name="ground">#F4F2EC</color>
+    <color name="icon_bg">#FAF9F5</color>
+    <!-- The page, so the app opens without a flash (dark version in values-night) -->
+    <color name="ground">#FAF9F5</color>
+    <!-- Home-screen widget: Midox's cream and coral (dark versions in values-night) -->
+    <color name="w_bg">#FAF9F5</color>
+    <color name="w_line">#E6DFD8</color>
+    <color name="w_tonal">#EFE9DE</color>
+    <color name="w_ink">#141413</color>
+    <color name="w_muted">#6C6A64</color>
+    <color name="w_accent">#B85A3A</color>
+    <color name="w_on_accent">#FFFFFF</color>
 </resources>

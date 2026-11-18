@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Poster's home-screen widget: today's posts, a bar, the streak, and Post 1 now. Tapping the card opens Poster. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.12"
+        android:text="MARKETPLACE TODAY"
+        android:textColor="@color/w_muted"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:baselineAligned="true"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/w_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sourceserif_regular"
+            android:text="0"
+            android:textColor="@color/w_ink"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/w_goal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sourceserif_regular"
+            android:text=" / 3"
+            android:textColor="@color/w_muted"
+            android:textSize="17sp" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/w_bar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="4dp"
+        android:max="3"
+        android:progress="0"
+        android:progressDrawable="@drawable/widget_progress" />
+
+    <TextView
+        android:id="@+id/w_detail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:maxLines="1"
+        android:text="Start a streak today"
+        android:textColor="@color/w_muted"
+        android:textSize="12sp" />
+
+    <!-- Spacer: widgets only allow a few view types, so a FrameLayout rather than a plain View. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/w_post"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/widget_button"
+        android:gravity="center"
+        android:text="Post 1 now"
+        android:textColor="@color/w_on_accent"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</LinearLayout>

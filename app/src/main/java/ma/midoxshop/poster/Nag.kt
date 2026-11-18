@@ -54,6 +54,7 @@ object Nag {
 
     /** Sets the next nag: later today if today isn't done, else tomorrow's first. Call after every change. */
     fun schedule(ctx: Context) {
+        Widget.update(ctx)   // a nag, a boot or a new day: the widget follows
         val am = ctx.getSystemService(AlarmManager::class.java)
         am.cancel(pending(ctx, 0))
         if (!Store.nagsOn(ctx)) return

@@ -126,6 +126,9 @@ object Store {
     fun setNagsOn(ctx: Context, on: Boolean) { p(ctx).edit().putBoolean("nags", on).apply(); bump() }
     fun loud(ctx: Context) = p(ctx).getBoolean("loud", true)
     fun setLoud(ctx: Context, on: Boolean) { p(ctx).edit().putBoolean("loud", on).apply(); bump() }
+    /** The alarm starts quiet and gets louder over 30 seconds, and buzzes only after 10. */
+    fun soft(ctx: Context) = p(ctx).getBoolean("soft", true)
+    fun setSoft(ctx: Context, on: Boolean) { p(ctx).edit().putBoolean("soft", on).apply(); bump() }
     fun alarmAfter(ctx: Context) = p(ctx).getInt("alarm_after", 90)
     fun setAlarmAfter(ctx: Context, m: Int) { p(ctx).edit().putInt("alarm_after", m).apply(); bump() }
     fun every(ctx: Context) = 30

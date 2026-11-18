@@ -2,6 +2,14 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.2: Widget, soft alarm, dark mode, Midox's look · 18 Nov 2026
+
+- **Home-screen widget.** Today's posts ("1 / 3") with a bar, your streak, and **Post 1 now**, which opens straight into post mode. Once your streak is safe, its button goes quiet.
+- **Soft alarm.** The full-screen alarm starts quiet, gets louder over 30 seconds, and buzzes only after 10. Turn it off in Settings › Start soft for the old all-at-once alarm.
+- **Dark mode.** Poster follows your phone: warm charcoal at night, cream by day. The widget too.
+- **Midox's look.** Same cream page, serif titles and numbers, white cards and one coral button per screen as Midox, with Midox's little touches: buttons that give under your finger, a tick on − / + and tabs, a "done" buzz when you mark a post.
+- **Post mode:** the copy rows show "Copied" once you've copied them, and the coral button moves from Open Marketplace to I posted it once Facebook is open.
+
 ## 1.0.1: Post every day without thinking · 18 Nov 2026
 
 - **Today** picks what to post (photos first, the longest since posted first) and shows your ring: 1 post keeps your streak, 3 is a great day.

@@ -50,6 +50,19 @@
             android:theme="@style/AppTheme" />
 
 
+        <!-- Home-screen widget: today's posts, the streak, Post 1 now -->
+        <receiver
+            android:name=".WidgetProvider"
+            android:exported="false"
+            android:label="Marketplace today">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
         <receiver
             android:name=".NagReceiver"
             android:exported="false">

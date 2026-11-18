@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +56,8 @@ import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.delay
 import ma.midoxshop.poster.ui.BigButton
 import ma.midoxshop.poster.ui.C
+import ma.midoxshop.poster.ui.Corners
+import ma.midoxshop.poster.ui.Serif
 import ma.midoxshop.poster.ui.Chip
 import ma.midoxshop.poster.ui.PosterTheme
 import java.util.Calendar
@@ -81,16 +82,33 @@ class AlarmActivity : ComponentActivity() {
         setContent { PosterTheme { AlarmScreen(test) } }
     }
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    /**
+     * Sound and buzz. With "Start soft" (the default) the sound starts at 15% and climbs to full over
+     * 30 seconds, and the buzz joins after 10: an alarm you don't dread is one you don't switch off.
+     */
     private fun startNoise() {
         val day = Days.today()
+        val soft = Store.soft(this)
         runCatching {
             val uri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             ringtone = RingtoneManager.getRingtone(this, uri)?.apply {
                 audioAttributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build()
-                if (Build.VERSION.SDK_INT >= 28) isLooping = true
+                if (Build.VERSION.SDK_INT >= 28) { isLooping = true; if (soft) volume = 0.15f }
                 play()
             }
+        }
+        if (soft && Build.VERSION.SDK_INT >= 28) {
+            val start = System.currentTimeMillis()
+            handler.post(object : Runnable {
+                override fun run() {
+                    val t = ((System.currentTimeMillis() - start) / 30_000f).coerceAtMost(1f)
+                    runCatching { ringtone?.volume = 0.15f + 0.85f * t * t }   // eases in, then climbs
+                    if (t < 1f) handler.postDelayed(this, 500)
+                }
+            })
         }
         // A different buzz each day.
         val patterns = listOf(
@@ -99,13 +117,17 @@ class AlarmActivity : ComponentActivity() {
             longArrayOf(0, 900, 600),
             longArrayOf(0, 250, 120, 600, 1000)
         )
-        runCatching {
-            vibrator = getSystemService(Vibrator::class.java)
-            vibrator?.vibrate(VibrationEffect.createWaveform(patterns[Math.floorMod(day.hashCode(), patterns.size)], 0))
+        val buzz = Runnable {
+            runCatching {
+                vibrator = getSystemService(Vibrator::class.java)
+                vibrator?.vibrate(VibrationEffect.createWaveform(patterns[Math.floorMod(day.hashCode(), patterns.size)], 0))
+            }
         }
+        if (soft) handler.postDelayed(buzz, 10_000) else buzz.run()
     }
 
     private fun stopNoise() {
+        handler.removeCallbacksAndMessages(null)
         runCatching { ringtone?.stop() }
         runCatching { vibrator?.cancel() }
     }
@@ -128,19 +150,25 @@ class AlarmActivity : ComponentActivity() {
         val n = remember { if (test) 0 else Store.nagNumber(this) }
         val tints = listOf(Color(0xFFEA580C), Color(0xFFDB2777), Color(0xFF7C3AED), Color(0xFF0891B2), Color(0xFFCA8A04))
         val tint = tints[Math.floorMod(day.hashCode() + n, tints.size)]
+        var pausing by remember { mutableStateOf(false) }
+        var started by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { started = true }
+        // With "Start soft" the glow fades in over the first 10 seconds too.
+        val fade by androidx.compose.animation.core.animateFloatAsState(
+            if (started) 1f else (if (Store.soft(this)) 0.25f else 1f), tween(10_000, easing = LinearEasing), label = "fade"
+        )
         val glow by rememberInfiniteTransition(label = "glow").animateFloat(
             0.35f, 0.95f, infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Reverse), label = "glow"
         )
         val left = (Store.min(this) - Store.postedToday(this)).coerceAtLeast(1)
         val snoozes = Store.snoozesLeft(this)
-        var pausing by remember { mutableStateOf(false) }
 
         // Two minutes of ringing, then it goes quiet (the next one comes in half an hour).
         LaunchedEffect(Unit) { delay(120_000); stopNoise() }
 
         Box(
-            Modifier.fillMaxSize().background(C.dark)
-                .background(Brush.radialGradient(listOf(tint.copy(alpha = glow), C.dark), radius = 1400f))
+            Modifier.fillMaxSize().background(C.viewer)
+                .background(Brush.radialGradient(listOf(tint.copy(alpha = glow * fade), C.viewer), radius = 1400f))
         ) {
             Column(
                 Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(24.dp),
@@ -149,7 +177,7 @@ class AlarmActivity : ComponentActivity() {
                 Spacer(Modifier.height(56.dp))
                 Text(if (test) "This is how the alarm looks" else "Post time", fontSize = 17.sp, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
-                Text(NagPlan.line(day, n), fontSize = 40.sp, lineHeight = 46.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                Text(NagPlan.line(day, n), fontFamily = Serif, fontSize = 40.sp, lineHeight = 46.sp, letterSpacing = (-1).sp, color = Color.White, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(16.dp))
                 val streak = Store.streak(this@AlarmActivity).days
                 Text(
@@ -158,7 +186,7 @@ class AlarmActivity : ComponentActivity() {
                 )
                 Spacer(Modifier.weight(1f))
                 if (!pausing) {
-                    BigButton("Post 1 now · 2 min", color = Color.White, textColor = C.ink, height = 72.dp) {
+                    BigButton("Post 1 now · 2 min", color = Color.White, textColor = Color(0xFF141413), height = 64.dp) {
                         finishWith {
                             startActivity(Intent(this@AlarmActivity, MainActivity::class.java).putExtra("go", "post").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                         }
@@ -172,14 +200,14 @@ class AlarmActivity : ComponentActivity() {
                         Spacer(Modifier.height(4.dp))
                         Text(
                             "I can't today", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f),
-                            modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                            modifier = Modifier.clip(Corners.Small)
                                 .pointerInput(Unit) { detectTapGestures { pausing = true } }
                                 .semantics { contentDescription = "Pause today" }
                                 .padding(16.dp)
                         )
                     }
                 } else {
-                    Text("Why not today?", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Why not today?", fontFamily = Serif, fontSize = 22.sp, color = Color.White)
                     Spacer(Modifier.height(12.dp))
                     val reasons = listOf("Riding / driving", "At work", "Sick", "Out with people", "No energy")
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -215,7 +243,7 @@ class AlarmActivity : ComponentActivity() {
             }
         }
         Box(
-            Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.15f))
+            Modifier.fillMaxWidth().height(56.dp).clip(Corners.Card).background(Color.White.copy(alpha = 0.15f))
                 .semantics { contentDescription = label }
                 .pointerInput(Unit) {
                     detectTapGestures(onPress = {
