@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="icon_bg">#FAF9F5</color>
-    <!-- The page, so the app opens without a flash (dark version in values-night) -->
-    <color name="ground">#FAF9F5</color>
-    <!-- Home-screen widget: Midox's cream and coral (dark versions in values-night) -->
-    <color name="w_bg">#FAF9F5</color>
-    <color name="w_line">#E6DFD8</color>
-    <color name="w_tonal">#EFE9DE</color>
-    <color name="w_ink">#141413</color>
-    <color name="w_muted">#6C6A64</color>
-    <color name="w_accent">#B85A3A</color>
+    <color name="icon_bg">#15171C</color>
+    <!-- The page, so the app (and its splash) opens on the right colour (night versions in values-night) -->
+    <color name="ground">#F4F2EC</color>
+    <color name="splash_track">#E7E4DC</color>
+    <color name="splash_arrow">#15171C</color>
+    <!-- Home-screen widget, the first design's colours (night versions in values-night) -->
+    <color name="w_bg">#FFFFFF</color>
+    <color name="w_line">#E7E4DC</color>
+    <color name="w_tonal">#F4F2EC</color>
+    <color name="w_ink">#15171C</color>
+    <color name="w_muted">#5B5F68</color>
+    <color name="w_accent">#EA580C</color>
     <color name="w_on_accent">#FFFFFF</color>
 </resources>

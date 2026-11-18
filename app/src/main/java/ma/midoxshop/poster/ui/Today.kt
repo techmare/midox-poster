@@ -4,8 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,9 +24,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,24 +43,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.first
 import ma.midoxshop.poster.Days
 import ma.midoxshop.poster.Item
 import ma.midoxshop.poster.Midox
 import ma.midoxshop.poster.Nag
 import ma.midoxshop.poster.Store
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
-/** Today's progress as a ring: [done] of [goal]. It fills in 250 ms (Midox's progress curve). */
+/**
+ * Today's progress as a ring: [done] of [goal]. It sweeps in from empty when it first shows, then
+ * springs to each new value.
+ */
 @Composable
-fun Ring(done: Int, goal: Int, size: Dp, stroke: Dp, track: Color = C.line, fill: Color = C.accent) {
+fun Ring(done: Int, goal: Int, size: Dp, stroke: Dp, track: Color = C.heroTrack, fill: Color = C.glow) {
     val target = done.coerceAtMost(goal).toFloat() / goal.coerceAtLeast(1)
-    val p by animateFloatAsState(target, tween(250, easing = Motion.EaseInOut), label = "ring")
+    val p = remember { Animatable(0f) }
+    LaunchedEffect(target) {
+        snapshotFlow { Launch.ready }.first { it }
+        p.animateTo(target, tween(700, easing = Motion.EaseOut))
+    }
     Canvas(Modifier.size(size)) {
         val w = stroke.toPx()
         val box = Size(this.size.width - w, this.size.height - w)
         val tl = Offset(w / 2, w / 2)
         drawArc(track, 0f, 360f, false, tl, box, style = Stroke(w))
-        if (p > 0f) drawArc(fill, -90f, 360f * p, false, tl, box, style = Stroke(w, cap = StrokeCap.Round))
+        // A dot even at 0, so the ring shows where it will fill from.
+        drawArc(fill, -90f, (360f * p.value).coerceAtLeast(1.5f), false, tl, box, style = Stroke(w, cap = StrokeCap.Round))
     }
+}
+
+fun longDate(day: String): String {
+    val d = LocalDate.parse(day)
+    return d.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " · " + d.dayOfMonth + " " + d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
 }
 
 @Composable
@@ -63,102 +88,104 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
     val next = data.nextPick()
     val allDone = data.picks.isNotEmpty() && next == null
 
-    Column(Modifier.fillMaxSize()) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 16.dp), modifier = Modifier.weight(1f)) {
-            item {
-                Title("Today", sub = Days.weekday(data.today) + " " + Days.dayOfMonth(data.today), big = true) {
-                    Row(
-                        Modifier.padding(bottom = 10.dp).clip(Corners.Round).background(C.card).padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(Icons.Flame, C.accent, 16.dp)
-                        Text(if (streak.days == 1) "1 day" else "${streak.days} days", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
-                    }
+    LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
+        item {
+            Title("Today", sub = longDate(data.today)) {
+                Row(
+                    Modifier.pop(120).clip(Corners.Pill).background(C.card).padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Flame, C.accentText, 16.dp)
+                    Rolling("${streak.days}", 14.sp, C.ink, Body, FontWeight.SemiBold)
+                    Text(if (streak.days == 1) "day" else "days", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
                 }
             }
-            // The info card: tonal, serif number, the ring.
-            item {
-                Row(
-                    Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp).fillMaxWidth().clip(Corners.Card).background(C.tonal).padding(18.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("TODAY'S POSTS", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp, color = C.muted)
+        }
+        // The dark card: today's count, the ring, and Start posting.
+        item {
+            Column(
+                Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp).pop(60).fillMaxWidth()
+                    .clip(Corners.Big).background(C.hero).padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Today's posts", fontSize = 14.sp, color = C.heroMuted)
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("${data.doneToday}", fontFamily = Serif, fontSize = 40.sp, letterSpacing = (-1).sp, color = C.ink)
-                            Text(" / ${data.goal}", fontFamily = Serif, fontSize = 24.sp, color = C.muted, modifier = Modifier.padding(bottom = 4.dp))
+                            Rolling("${data.doneToday}", 44.sp, C.onHero)
+                            Text(" / ${data.goal}", fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = C.heroMuted, modifier = Modifier.padding(bottom = 6.dp))
                         }
-                        Text(
-                            when {
+                        AnimatedContent(
+                            targetState = when {
                                 paused != null -> "Paused today: ${paused.lowercase()}. Your streak is safe."
                                 data.doneToday >= data.goal -> "Great day. You're done."
                                 data.doneToday >= data.min -> "Streak saved. The rest is a bonus."
                                 data.min == 1 -> "1 post keeps your streak. ${data.goal} is a great day."
                                 else -> "${data.min} posts keep your streak."
                             },
-                            fontSize = 13.sp, color = C.muted
-                        )
+                            transitionSpec = { (fadeIn(tween(Motion.QUICK)) + slideInVertically(tween(Motion.QUICK)) { it / 2 }) togetherWith fadeOut(tween(Motion.QUICK / 2)) },
+                            label = "msg"
+                        ) { Text(it, fontSize = 13.sp, color = C.heroMuted) }
                     }
-                    Ring(data.doneToday, data.goal, 72.dp, 7.dp)
+                    Ring(data.doneToday, data.goal, 76.dp, 8.dp)
                 }
-            }
-            if (paused != null) item {
-                Text(
-                    "Resume today", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.accent,
-                    modifier = Modifier.padding(start = 8.dp, top = 4.dp).clip(Corners.Small)
+                when {
+                    data.items == null -> BigButton("Open Midox", arrow = true, onClick = { Midox.open(ctx) })
+                    allDone -> BigButton("All of today's posts are up", color = C.good, onClick = onQueue)
+                    next == null -> BigButton("Nothing to post · see the queue", color = C.heroTrack, onClick = onQueue)
+                    else -> BigButton("Start posting", arrow = true, onClick = onStart)
+                }
+                if (next != null && data.items != null) Text(
+                    "About 2 min a post · everything is ready", fontSize = 13.sp, color = C.heroMuted,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 0.dp)
+                )
+                if (paused != null) Text(
+                    "Resume today", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.glow,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).clip(Corners.Small)
                         .clickableRole { Store.pause(ctx, null); Nag.schedule(ctx) }.padding(12.dp)
                 )
             }
-            item { SetupCard(data) }
-            if (data.picks.isNotEmpty()) {
-                item { Section("Picked for you", trailing = "${data.picks.count { data.posted[it.id] == data.today }} of ${data.picks.size} done") }
-                item {
-                    Group(
-                        Modifier.padding(horizontal = 16.dp),
-                        data.picks.map { p ->
-                            @Composable {
-                                val done = data.posted[p.id] == data.today
-                                val last = data.posted[p.id]
-                                ItemRow(
-                                    p,
-                                    when {
-                                        done -> "Posted today"
-                                        last == null -> "Never posted"
-                                        else -> "Repost · last posted " + Days.ago(last, data.today)
-                                    },
-                                    onClick = { onPost(p) }
-                                ) {
-                                    when {
-                                        done -> Tag("Done", C.good, C.goodSoft)
-                                        p.pics.isEmpty() -> Tag("No photo", C.warn, C.tonal)
-                                        else -> Tag("Ready", C.good, C.goodSoft)
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-                item {
-                    Text(
-                        "See the week", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.ink,
-                        modifier = Modifier.padding(start = 8.dp, top = 6.dp).clip(Corners.Small).clickableRole(onQueue).padding(12.dp)
-                    )
+        }
+        item { SetupCard(data) }
+        if (data.picks.isNotEmpty()) {
+            item {
+                Section("Picked for you") {
+                    Text("See queue", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.accentText,
+                        modifier = Modifier.clip(Corners.Small).clickableRole(onQueue).padding(8.dp))
                 }
             }
-            item {
-                if (Store.nagsOn(ctx)) Text(
-                    "Reminder at " + hm(Store.remindAt(ctx)) + if (Store.loud(ctx)) ", then the alarm until you post." else " if you haven't posted.",
-                    fontSize = 13.sp, color = C.muted, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)
-                )
+            itemsIndexed(data.picks, key = { _, p -> p.id }) { i, p ->
+                val done = data.posted[p.id] == data.today
+                val last = data.posted[p.id]
+                Box(Modifier.padding(horizontal = 24.dp, vertical = 5.dp).enter(i + 2).animateItem()) {
+                    ItemRow(
+                        p,
+                        when {
+                            done -> "Posted today"
+                            last == null -> "Never posted"
+                            else -> "Repost · last posted " + Days.ago(last, data.today)
+                        },
+                        onClick = { onPost(p) }
+                    ) {
+                        when {
+                            done -> Pill("Done", C.good, C.goodSoft)
+                            p.pics.isEmpty() -> Pill("No photo", C.accentInk, C.accentSoft)
+                            else -> Pill("Ready", C.good, C.goodSoft)
+                        }
+                    }
+                }
             }
         }
-        // The one coral action, in thumb reach.
-        Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
-            when {
-                data.items == null -> BigButton("Open Midox", onClick = { Midox.open(ctx) })
-                allDone -> SoftButton("All of today's posts are up · see the week", onClick = onQueue)
-                next == null -> SoftButton("Nothing to post today · see the week", onClick = onQueue)
-                else -> BigButton("Start posting · about 2 min", onClick = onStart)
+        item {
+            if (Store.nagsOn(ctx)) Row(
+                Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).enter(6),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Clock, C.muted, 16.dp)
+                Text(
+                    "Reminder at " + hm(Store.remindAt(ctx)) + if (Store.loud(ctx)) ", then the alarm until you post" else " if you haven't posted",
+                    fontSize = 13.sp, color = C.muted
+                )
             }
         }
     }
@@ -188,20 +215,23 @@ fun SetupCard(data: Data) {
         })
     }
     if (missing.isEmpty()) return
-    Column {
-        Section("Needs you")
-        Group(Modifier.padding(horizontal = 16.dp), rows = missing.map { (title, why, go) ->
-            @Composable {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = C.ink)
-                        Text(why, fontSize = 13.sp, color = C.muted)
-                    }
-                    Spacer(Modifier.size(10.dp))
-                    InkButton("Fix", onClick = go)
+    Column(
+        Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).enter(1).fillMaxWidth().clip(Corners.Card)
+            .background(C.accentSoft).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("To help you post, Poster needs:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = C.accentInk)
+        missing.forEach { (title, why, go) ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
+                    Text(why, fontSize = 13.sp, color = C.muted)
                 }
+                Spacer(Modifier.size(10.dp))
+                Text("Fix", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White,
+                    modifier = Modifier.tap(onClick = go).clip(Corners.Small).background(C.accentText).padding(horizontal = 16.dp, vertical = 12.dp))
             }
-        })
+        }
     }
 }
 

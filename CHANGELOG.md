@@ -2,6 +2,13 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.3: Back to Poster's own look, everything moves · 18 Nov 2026
+
+- **Poster's first design is back:** warm off-white, near-black, orange, the dark card with today's ring, Space Grotesk and Inter. Dark mode stays, in the same colours.
+- **Opening animation:** open Poster from its icon and you fly through its ring: the middle opens into a window onto the app, which settles into place. Android 12 and up.
+- **Everything animates:** lists come in one row after another, the ring sweeps in and fills, numbers roll, tabs and screens slide, the bottom bar's marker glides, switches spring, Copy turns into a drawn tick, the orange button slides from Open Marketplace to I posted it, and the Done screen draws its check.
+- The widget and the app icon are back in the first design's colours.
+
 ## 1.0.2: Widget, soft alarm, dark mode, Midox's look · 18 Nov 2026
 
 - **Home-screen widget.** Today's posts ("1 / 3") with a bar, your streak, and **Post 1 now**, which opens straight into post mode. Once your streak is safe, its button goes quiet.

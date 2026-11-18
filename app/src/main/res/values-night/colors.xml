@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ground">#1A1917</color>
-    <color name="w_bg">#262522</color>
-    <color name="w_line">#34322E</color>
-    <color name="w_tonal">#2F2D29</color>
-    <color name="w_ink">#FAF9F5</color>
-    <color name="w_muted">#A09D96</color>
-    <color name="w_accent">#D97757</color>
-    <color name="w_on_accent">#141413</color>
+    <color name="ground">#0F1013</color>
+    <color name="splash_track">#2C2F36</color>
+    <color name="splash_arrow">#FFFFFF</color>
+    <color name="w_bg">#1A1C21</color>
+    <color name="w_line">#2A2D34</color>
+    <color name="w_tonal">#23262C</color>
+    <color name="w_ink">#F4F2EC</color>
+    <color name="w_muted">#9EA2AB</color>
+    <color name="w_accent">#EA580C</color>
+    <color name="w_on_accent">#FFFFFF</color>
 </resources>

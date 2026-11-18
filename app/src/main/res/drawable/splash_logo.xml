@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The splash screen's picture: Poster's ring (a third full, today's posts) around its arrow, in a
+     108dp square. The opening animation (OpeningReveal.kt) flies through the ring's middle and finds it
+     from these sizes: centre 54, 54; ring radius 24, 7 wide, so its inside edge is at 20.5. Change them
+     there too. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M54,30a24,24 0,1 1,0 48a24,24 0,1 1,0 -48" android:strokeColor="@color/splash_track" android:strokeWidth="7" android:fillColor="#00000000"/>
+    <path android:pathData="M54,30a24,24 0,0 1,20.8 12" android:strokeColor="#EA580C" android:strokeWidth="7" android:strokeLineCap="round" android:fillColor="#00000000"/>
+    <path android:pathData="M44,54h20M56,46l8,8 -8,8" android:strokeColor="@color/splash_arrow" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"/>
+</vector>

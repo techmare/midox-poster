@@ -57,7 +57,8 @@ import kotlinx.coroutines.delay
 import ma.midoxshop.poster.ui.BigButton
 import ma.midoxshop.poster.ui.C
 import ma.midoxshop.poster.ui.Corners
-import ma.midoxshop.poster.ui.Serif
+import ma.midoxshop.poster.ui.Display
+import ma.midoxshop.poster.ui.enter
 import ma.midoxshop.poster.ui.Chip
 import ma.midoxshop.poster.ui.PosterTheme
 import java.util.Calendar
@@ -177,7 +178,7 @@ class AlarmActivity : ComponentActivity() {
                 Spacer(Modifier.height(56.dp))
                 Text(if (test) "This is how the alarm looks" else "Post time", fontSize = 17.sp, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(12.dp))
-                Text(NagPlan.line(day, n), fontFamily = Serif, fontSize = 40.sp, lineHeight = 46.sp, letterSpacing = (-1).sp, color = Color.White, textAlign = TextAlign.Center)
+                Text(NagPlan.line(day, n), fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 40.sp, lineHeight = 46.sp, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.enter(1, rise = 30.dp))
                 Spacer(Modifier.height(16.dp))
                 val streak = Store.streak(this@AlarmActivity).days
                 Text(
@@ -207,7 +208,7 @@ class AlarmActivity : ComponentActivity() {
                         )
                     }
                 } else {
-                    Text("Why not today?", fontFamily = Serif, fontSize = 22.sp, color = Color.White)
+                    Text("Why not today?", fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = Color.White, modifier = Modifier.enter())
                     Spacer(Modifier.height(12.dp))
                     val reasons = listOf("Riding / driving", "At work", "Sick", "Out with people", "No energy")
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
