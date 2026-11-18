@@ -37,6 +37,7 @@ object Store {
     fun postedToday(ctx: Context): Int = counts(ctx)[Days.today()] ?: 0
 
     fun markPosted(ctx: Context, pid: String, day: String = Days.today()) {
+        p(ctx).edit().putLong("last_post_at", System.currentTimeMillis()).apply()
         val m = posted(ctx).toMutableMap()
         val again = m[pid] == day
         m[pid] = day
@@ -49,6 +50,10 @@ object Store {
             putMap(ctx, "counts", c.filterKeys { it >= Days.shift(day, -400) }.mapValues { it.value.toString() })
         }
     }
+
+    /** When you last marked a post, for the 10 minutes between posts. */
+    fun lastPostAt(ctx: Context): Long = p(ctx).getLong("last_post_at", 0L)
+    fun waitLeft(ctx: Context): Long = Posts.waitLeft(lastPostAt(ctx), System.currentTimeMillis())
 
     /** Undo today's "I posted it". */
     fun unmarkPosted(ctx: Context, pid: String, day: String = Days.today()) {
@@ -116,9 +121,9 @@ object Store {
     // ---- Settings ----
 
     fun min(ctx: Context) = p(ctx).getInt("min", 1).coerceIn(1, 5)
-    fun goal(ctx: Context) = p(ctx).getInt("goal", 3).coerceIn(min(ctx), 5)
+    fun goal(ctx: Context) = p(ctx).getInt("goal", 3).coerceIn(min(ctx), Posts.MAX_A_DAY)
     fun setMin(ctx: Context, n: Int) { p(ctx).edit().putInt("min", n.coerceIn(1, 5)).apply(); if (goal(ctx) < n) setGoal(ctx, n); bump() }
-    fun setGoal(ctx: Context, n: Int) { p(ctx).edit().putInt("goal", n.coerceIn(min(ctx), 5)).apply(); bump() }
+    fun setGoal(ctx: Context, n: Int) { p(ctx).edit().putInt("goal", n.coerceIn(min(ctx), Posts.MAX_A_DAY)).apply(); bump() }
 
     fun remindAt(ctx: Context) = p(ctx).getInt("remind_at", 19 * 60)
     fun setRemindAt(ctx: Context, m: Int) { p(ctx).edit().putInt("remind_at", m).apply(); bump() }

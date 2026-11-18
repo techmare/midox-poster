@@ -72,6 +72,35 @@ object Nag {
     fun calmDown(ctx: Context) {
         NotificationManagerCompat.from(ctx).cancel(NOTE_ID)
         schedule(ctx)
+        scheduleReady(ctx)
+    }
+
+    // ---- "Next post is ready": after a post, once the 10 minutes between posts are up ----
+
+    private const val READY_ID = 9
+
+    private fun readyIntent(ctx: Context): PendingIntent = PendingIntent.getBroadcast(
+        ctx, 4, Intent(ctx, NagReceiver::class.java).setAction("ma.midoxshop.poster.READY"),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    /** Rings softly when the next post is allowed, while today's goal isn't reached (and it's not late). */
+    fun scheduleReady(ctx: Context) {
+        val am = ctx.getSystemService(AlarmManager::class.java)
+        am.cancel(readyIntent(ctx))
+        if (!Store.nagsOn(ctx) || Store.postedToday(ctx) >= Store.goal(ctx) || Store.pausedToday(ctx) != null) return
+        val at = Store.lastPostAt(ctx) + Posts.GAP_MINUTES * 60_000L
+        if (at <= System.currentTimeMillis() || nowMinute() + Posts.GAP_MINUTES > Store.endAt(ctx)) return
+        if (Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, readyIntent(ctx))
+        else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, readyIntent(ctx))
+    }
+
+    fun ready(ctx: Context) {
+        val done = Store.postedToday(ctx)
+        val goal = Store.goal(ctx)
+        if (done >= goal || Store.pausedToday(ctx) != null) return
+        val left = goal - done
+        notify(ctx, CH_QUIET, "Next post is ready", "$done of $goal today · $left to go, if you feel like it.", id = READY_ID)
     }
 
     /** On a call (or ringing), the alarm waits 10 minutes rather than covering the call. */
@@ -102,7 +131,7 @@ object Nag {
         schedule(ctx)
     }
 
-    private fun notify(ctx: Context, channel: String, title: String, text: String, fullScreen: PendingIntent? = null) {
+    private fun notify(ctx: Context, channel: String, title: String, text: String, fullScreen: PendingIntent? = null, id: Int = NOTE_ID) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         channels(ctx)
@@ -120,7 +149,7 @@ object Nag {
             .setCategory(if (fullScreen != null) NotificationCompat.CATEGORY_ALARM else NotificationCompat.CATEGORY_REMINDER)
             .setPriority(if (channel == CH_QUIET) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
         if (fullScreen != null) b.setFullScreenIntent(fullScreen, true).setOngoing(true)
-        NotificationManagerCompat.from(ctx).notify(NOTE_ID, b.build())
+        NotificationManagerCompat.from(ctx).notify(id, b.build())
     }
 
     // ---- What's missing for the nags to work ----
@@ -135,6 +164,7 @@ object Nag {
 class NagReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         if (intent.action == "ma.midoxshop.poster.NAG") Nag.fire(ctx, intent.getIntExtra("level", 0))
+        else if (intent.action == "ma.midoxshop.poster.READY") Nag.ready(ctx)
         else Nag.schedule(ctx)   // phone restarted, app updated, clock changed
     }
 }

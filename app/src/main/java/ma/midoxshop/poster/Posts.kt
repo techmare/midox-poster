@@ -39,6 +39,16 @@ object Posts {
     /** A product posted less than this many days ago is not suggested again; after it, it is "repost due". */
     const val REST_DAYS = 14
 
+    /** The most posts a day you can aim for: more, close together, looks like spam to Facebook. */
+    const val MAX_A_DAY = 10
+
+    /** Minutes between two posts, so they're spread out instead of arriving in a burst. */
+    const val GAP_MINUTES = 10
+
+    /** Milliseconds until the next post is OK, or 0. */
+    fun waitLeft(lastPostAt: Long, now: Long): Long =
+        if (lastPostAt <= 0L) 0L else (lastPostAt + GAP_MINUTES * 60_000L - now).coerceAtLeast(0L)
+
     /** The price typed on Marketplace: always 1 dh (0 shows as "Free"). Buyers ask for the real one. */
     const val LISTING_PRICE = "1"
 

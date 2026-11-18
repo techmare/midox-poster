@@ -2,6 +2,13 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.4: Up to 10 a day, spaced out · 18 Nov 2026
+
+- **Good day can go up to 10 posts** (Settings › Daily goal). The minimum that keeps your streak stays as you set it.
+- **10 minutes between posts**, so Facebook never sees a burst from your account. While you wait, Start posting shows the countdown and you can still open the next post and copy everything; Open Marketplace unlocks when the time is up.
+- **"Next post is ready"**: a quiet notification when the 10 minutes are up, until today's goal is reached.
+- The Queue shows "3/10" on busy days instead of a row of dots.
+
 ## 1.0.3: Back to Poster's own look, everything moves · 18 Nov 2026
 
 - **Poster's first design is back:** warm off-white, near-black, orange, the dark card with today's ring, Space Grotesk and Inter. Dark mode stays, in the same colours.

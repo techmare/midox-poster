@@ -83,7 +83,9 @@ fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
                 ) {
                     Text(if (i == 0) "Today" else Days.weekday(d), fontSize = 11.sp, color = if (on) fg.copy(alpha = 0.75f) else C.muted, maxLines = 1)
                     Text("${Days.dayOfMonth(d)}", fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = fg)
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    // A dot per post fits up to 5; more than that, "3/10".
+                    if (list.size > 5) Text("${list.count { data.posted[it.id] == d }}/${list.size}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = if (on) fg else C.muted)
+                    else Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         list.forEach { p ->
                             val c = when { data.posted[p.id] == d -> C.glow; p.pics.isEmpty() -> C.line; else -> C.good }
                             Box(Modifier.size(5.dp).clip(CircleShape).background(c))
@@ -243,7 +245,7 @@ fun SettingsScreen(data: Data) {
         Label("Daily goal")
         SettingsCard(1) {
             SettingRow("Minimum", "keeps the streak", divider = true) { Stepper(Store.min(ctx)) { Store.setMin(ctx, it); reschedule() } }
-            SettingRow("Good day", "the full ring", divider = true) { Stepper(Store.goal(ctx)) { Store.setGoal(ctx, it); reschedule() } }
+            SettingRow("Good day", "the full ring · up to ${Posts.MAX_A_DAY}, 10 min apart", divider = true) { Stepper(Store.goal(ctx)) { Store.setGoal(ctx, it); reschedule() } }
             SettingRow("Streak freezes", "missed days a week that don't break it") { Stepper(Store.freezes(ctx)) { Store.setFreezes(ctx, it) } }
         }
 

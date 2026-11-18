@@ -87,6 +87,7 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
     val paused = Store.pausedToday(ctx)
     val next = data.nextPick()
     val allDone = data.picks.isNotEmpty() && next == null
+    val wait = rememberWait()
 
     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
         item {
@@ -133,10 +134,12 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
                     data.items == null -> BigButton("Open Midox", arrow = true, onClick = { Midox.open(ctx) })
                     allDone -> BigButton("All of today's posts are up", color = C.good, onClick = onQueue)
                     next == null -> BigButton("Nothing to post · see the queue", color = C.heroTrack, onClick = onQueue)
+                    // Posts are spaced 10 minutes apart; you can still open the next one and get it ready.
+                    wait > 0 -> BigButton("Next post in ${mmss(wait)}", color = C.heroTrack, onClick = onStart)
                     else -> BigButton("Start posting", arrow = true, onClick = onStart)
                 }
                 if (next != null && data.items != null) Text(
-                    "About 2 min a post · everything is ready", fontSize = 13.sp, color = C.heroMuted,
+                    if (wait > 0) "Spacing your posts so Facebook sees no burst" else "About 2 min a post · everything is ready", fontSize = 13.sp, color = C.heroMuted,
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 0.dp)
                 )
                 if (paused != null) Text(

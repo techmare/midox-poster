@@ -296,6 +296,25 @@ fun Rolling(value: String, size: TextUnit, color: Color, family: FontFamily = Di
     ) { Text(it, fontFamily = family, fontWeight = weight, fontSize = size, color = color, maxLines = 1) }
 }
 
+/**
+ * Milliseconds until the next post is allowed (10 minutes after the last one), ticking every second;
+ * 0 when you can post now.
+ */
+@Composable
+fun rememberWait(): Long {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val changes = ma.midoxshop.poster.Store.changes
+    var left by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(ma.midoxshop.poster.Store.waitLeft(ctx)) }
+    LaunchedEffect(changes) {
+        left = ma.midoxshop.poster.Store.waitLeft(ctx)
+        while (left > 0) { delay(1000); left = ma.midoxshop.poster.Store.waitLeft(ctx) }
+    }
+    return left
+}
+
+/** 6:42 */
+fun mmss(ms: Long): String { val s = (ms + 999) / 1000; return "%d:%02d".format(s / 60, s % 60) }
+
 // ---- Haptics ----
 
 class Haptics(private val view: View) {

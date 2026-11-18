@@ -130,6 +130,7 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
     var inGallery by remember(item.id) { mutableIntStateOf(-1) }   // -1: still putting them there
     var opened by remember(item.id) { mutableStateOf(false) }
     var copied by remember(item.id) { mutableStateOf(setOf<String>()) }
+    val wait = rememberWait()
 
     LaunchedEffect(item.id) {
         Store.startPost(ctx)
@@ -237,7 +238,9 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                         (slideOutVertically(tween(Motion.SCREEN, easing = Motion.EaseOut)) { -it } + fadeOut(tween(Motion.QUICK)))
                 }
             ) { o ->
-                if (!o) BigButton("Open Marketplace", arrow = true) { opened = true; openMarketplace(ctx) }
+                // 10 minutes between posts: copy everything meanwhile, Marketplace opens when it's time.
+                if (!o && wait > 0) BigButton("Ready in ${mmss(wait)} · copy meanwhile", color = C.tonal, textColor = C.muted) { haptics.tick() }
+                else if (!o) BigButton("Open Marketplace", arrow = true) { opened = true; openMarketplace(ctx) }
                 else BigButton("I posted it", color = C.good) { haptics.done(); posted(ctx, item); onPosted() }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -258,6 +261,7 @@ fun DoneScreen(data: Data, onNext: () -> Unit, onStop: () -> Unit) {
     val secs = remember { Store.postSeconds(ctx) }
     val next = data.nextPick()
     val left = data.goal - data.doneToday
+    val wait = rememberWait()
     val pop = remember { Animatable(0.6f) }
     LaunchedEffect(Unit) { pop.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessLow)) }
 
@@ -296,7 +300,7 @@ fun DoneScreen(data: Data, onNext: () -> Unit, onStop: () -> Unit) {
         Spacer(Modifier.weight(1f))
         Column(Modifier.enter(7, rise = 40.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (next != null && left > 0) {
-                BigButton("Keep going · next post", arrow = true, onClick = onNext)
+                BigButton(if (wait > 0) "Next post in ${mmss(wait)} · get it ready" else "Keep going · next post", arrow = wait == 0L, onClick = onNext)
                 BigButton("I'm done for today", color = C.hero2, height = 56.dp, onClick = onStop)
             } else BigButton("Back to Today", onClick = onStop)
         }

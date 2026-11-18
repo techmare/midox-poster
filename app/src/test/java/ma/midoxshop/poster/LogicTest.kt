@@ -73,4 +73,16 @@ class LogicTest {
         assertEquals(NagPlan.Slot(20 * 60 + 45, 2), NagPlan.next(s, 20 * 60 + 30, 20 * 60 + 45))
         assertNull(NagPlan.next(s, 23 * 60, null))
     }
+
+    @Test fun postsAreSpacedTenMinutes() {
+        assertEquals(0L, Posts.waitLeft(0L, 1_000_000L))
+        assertEquals(10 * 60_000L, Posts.waitLeft(1_000_000L, 1_000_000L))
+        assertEquals(60_000L, Posts.waitLeft(1_000_000L, 1_000_000L + 9 * 60_000L))
+        assertEquals(0L, Posts.waitLeft(1_000_000L, 1_000_000L + 11 * 60_000L))
+    }
+
+    @Test fun tenPicksADay() {
+        val items = (1..30).map { item("$it") }
+        assertEquals(10, Posts.picks(items, emptyMap(), emptySet(), "2026-11-18", Posts.MAX_A_DAY).size)
+    }
 }
