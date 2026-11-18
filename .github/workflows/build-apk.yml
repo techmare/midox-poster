@@ -1,0 +1,64 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Unit tests
+        run: gradle --no-daemon testDebugUnitTest
+
+      - name: Build the APK
+        run: gradle --no-daemon assembleRelease
+
+      - name: Name the APK
+        run: cp app/build/outputs/apk/release/app-release.apk midox-poster.apk
+
+      - name: Keep a copy on the build page
+        uses: actions/upload-artifact@v4
+        with:
+          name: midox-poster-apk
+          path: midox-poster.apk
+
+      - name: Write the release notes (the top section of CHANGELOG.md)
+        run: |
+          {
+            echo "Download **midox-poster.apk** below and open it on your phone to install or update. Your data is kept."
+            echo
+            awk '/^## /{n++} n==1' CHANGELOG.md
+          } > release-notes.md
+          cat release-notes.md
+
+      # The version is the top section of CHANGELOG.md ("## 1.0.N: …"), like versionName in app/build.gradle.
+      - name: Work out the version
+        id: ver
+        run: |
+          n=$(grep -m1 -oE '^## 1\.0\.[0-9]+' CHANGELOG.md | sed 's/^## 1\.0\.//')
+          echo "name=1.0.$n" >> "$GITHUB_OUTPUT"
+
+      - name: Publish a release you can download on the phone
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.name }}
+          name: Midox Poster ${{ steps.ver.outputs.name }}
+          body_path: release-notes.md
+          files: midox-poster.apk
+          make_latest: true

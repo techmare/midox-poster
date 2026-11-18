@@ -1,0 +1,90 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
+}
+
+// The version is the top section of CHANGELOG.md ("## 1.0.3: …"): versionCode is the 3, so every new
+// APK, built on GitHub or anywhere else, installs over the last one.
+def changelogTop = rootProject.file('CHANGELOG.md').readLines().find { it.startsWith('## 1.0.') }
+def patchNumber = (changelogTop =~ /^## 1\.0\.(\d+)/)[0][1].toInteger()
+
+android {
+    namespace 'ma.midoxshop.poster'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'ma.midoxshop.poster'
+        minSdk 26
+        targetSdk 34
+        versionCode patchNumber
+        versionName "1.0.${patchNumber}"
+    }
+
+    // The shop's own key, the same as Midox: only an app signed with it may read Midox's products and photos.
+    signingConfigs {
+        release {
+            storeFile file('midox-release.jks')
+            storePassword 'midox2026'
+            keyAlias 'midox'
+            keyPassword 'midox2026'
+        }
+        debug {
+            storeFile file('midox-release.jks')
+            storePassword 'midox2026'
+            keyAlias 'midox'
+            keyPassword 'midox2026'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.release
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }
+}
+
+dependencies {
+    def composeBom = platform('androidx.compose:compose-bom:2024.09.00')
+    implementation composeBom
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material3:material3'
+
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.activity:activity-compose:1.9.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
+    implementation 'io.coil-kt:coil-compose:2.7.0'
+
+    testImplementation 'junit:junit:4.13.2'
+}
