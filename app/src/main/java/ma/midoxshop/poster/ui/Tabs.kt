@@ -108,7 +108,7 @@ fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
             LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
                 item {
                     val ready = list.count { it.pics.isNotEmpty() }
-                    Section((if (s == 0) "Today" else Days.weekday(day) + " " + Days.dayOfMonth(day)) + " · $ready of ${list.size} ready")
+                    Section((if (s == 0) "Today" else Days.weekday(day) + " " + Days.dayOfMonth(day)) + if (list.isEmpty()) "" else " · $ready of ${list.size} ready")
                 }
                 if (data.items == null) item { SetupCard(data) }
                 else if (list.isEmpty()) item {
@@ -140,7 +140,7 @@ fun QueueScreen(data: Data, onPost: (Item) -> Unit) {
                         }
                     }
                 }
-                item {
+                if (list.isNotEmpty()) item {
                     Text(
                         "Swap to put another product in. Tap one to post it now.",
                         fontSize = 13.sp, color = C.muted, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).enter(list.size)
@@ -304,7 +304,7 @@ fun SettingsScreen(data: Data) {
             AnimatedVisibility(Store.loud(ctx), enter = expandVertically(tween(Motion.SCREEN, easing = Motion.EaseOut)) + fadeIn(), exit = shrinkVertically(tween(Motion.QUICK)) + fadeOut()) {
                 Column {
                     SettingRow("Start soft", "quiet at first, louder over 30 seconds", divider = true) { Toggle(Store.soft(ctx)) { Store.setSoft(ctx, it) } }
-                    ChipRow("Alarm starts after the reminder", listOf(30, 60, 90, 120).map { "+$it min" to it }, Store.alarmAfter(ctx)) { Store.setAlarmAfter(ctx, it); reschedule() }
+                    ChipRow("Alarm starts after the reminder", listOf(30, 60, 90, 120).map { (if (it < 60) "$it min" else if (it % 60 == 0) "${it / 60} h" else "${it / 60} h ${it % 60}") to it }, Store.alarmAfter(ctx)) { Store.setAlarmAfter(ctx, it); reschedule() }
                 }
             }
             SettingRow("Morning nudge", "a quiet one at a moment you're up anyway, like arriving at the shop", divider = Store.morningAt(ctx) != null) {
@@ -367,10 +367,13 @@ private fun SettingRow(title: String, sub: String?, divider: Boolean = false, ri
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(title: String, options: List<Pair<String, Int>>, value: Int, onPick: (Int) -> Unit) {
     Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { options.forEach { (l, v) -> Chip(l, v == value) { onPick(v) } } }
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { (l, v) -> Chip(l, v == value) { onPick(v) } }
+        }
     }
 }

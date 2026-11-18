@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -240,13 +241,13 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
             }
             // The two dropdowns copy can't fill: what to pick.
             Label("Then pick in Facebook")
-            Row(Modifier.padding(horizontal = 20.dp).enter(5), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.padding(horizontal = 20.dp).enter(5).height(androidx.compose.foundation.layout.IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Your own word for it wins: tap to set Facebook's category for this whole Midox category.
                 var editing by remember { mutableStateOf(false) }
                 val cat = Store.fbCategory(ctx, item.cat) ?: Posts.category(item)
-                Hint("Catégorie · tap to change", cat, Modifier.weight(1f).clickableRole { editing = true })
+                Hint("Catégorie", cat, Modifier.weight(1f).fillMaxHeight(), edit = true) { editing = true }
                 if (editing) CategoryDialog(item.cat.ifBlank { "this kind" }, cat, onDismiss = { editing = false }) { Store.setFbCategory(ctx, item.cat, it); editing = false }
-                Hint("État", Posts.condition(item), Modifier.weight(1f))
+                Hint("État", Posts.condition(item), Modifier.weight(1f).fillMaxHeight())
             }
             Spacer(Modifier.height(12.dp))
         }
@@ -267,9 +268,8 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (opened) SoftButton("Open again", Modifier.weight(1f)) { openMarketplace(ctx) }
-                else SoftButton("Skip this one", Modifier.weight(1f)) { onSkip() }
+                SoftButton("Skip this one", Modifier.weight(1f)) { onSkip() }
                 if (!opened && Store.message(ctx).isBlank()) SoftButton("New wording", Modifier.weight(1f)) { Store.nextWording(ctx, item.id); copiedText = (copied - "Description").joinToString("|") }
-                if (opened) SoftButton("I posted it", Modifier.weight(1f)) { haptics.done(); postedNow = true; posted(ctx, item); onPosted() }
             }
         }
     }
@@ -294,9 +294,15 @@ private fun CategoryDialog(midoxCat: String, current: String, onDismiss: () -> U
 }
 
 @Composable
-private fun Hint(label: String, value: String, modifier: Modifier) {
-    Column(modifier.clip(Corners.Card).background(C.card).padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = C.muted)
+private fun Hint(label: String, value: String, modifier: Modifier, edit: Boolean = false, onEdit: () -> Unit = {}) {
+    Column(
+        modifier.then(if (edit) Modifier.tap(onClick = onEdit) else Modifier).clip(Corners.Card).background(C.card)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = C.muted, modifier = Modifier.weight(1f))
+            if (edit) Text("Edit", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = C.accentText)
+        }
         Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = C.ink, lineHeight = 20.sp)
     }
 }
@@ -310,6 +316,7 @@ fun DoneScreen(data: Data, postedId: String, onNext: () -> Unit, onStop: () -> U
     val next = data.nextPick()
     val left = data.goal - data.doneToday
     val wait = rememberWait()
+    LightBarIcons()
     val pop = remember { Animatable(0.6f) }
     LaunchedEffect(Unit) { pop.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessLow)) }
 

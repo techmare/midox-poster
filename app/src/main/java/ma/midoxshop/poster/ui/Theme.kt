@@ -326,6 +326,19 @@ fun rememberWait(): Long {
 /** 6:42 */
 fun mmss(ms: Long): String { val s = (ms + 999) / 1000; return "%d:%02d".format(s / 60, s % 60) }
 
+/** While a dark screen shows (Done), the status bar's clock and icons turn light, then back. */
+@Composable
+fun LightBarIcons() {
+    val view = LocalView.current
+    androidx.compose.runtime.DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        val bars = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
+        val was = bars?.isAppearanceLightStatusBars
+        bars?.isAppearanceLightStatusBars = false
+        onDispose { if (was != null) bars.isAppearanceLightStatusBars = was }
+    }
+}
+
 // ---- Haptics ----
 
 class Haptics(private val view: View) {

@@ -97,8 +97,11 @@ fun TodayScreen(data: Data, onStart: () -> Unit, onPost: (Item) -> Unit, onQueue
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(Icons.Flame, C.accentText, 16.dp)
-                    Rolling("${streak.days}", 14.sp, C.ink, Body, FontWeight.SemiBold)
-                    Text(if (streak.days == 1) "day" else "days", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
+                    if (streak.days == 0) Text("Start a streak", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
+                    else {
+                        Rolling("${streak.days}", 14.sp, C.ink, Body, FontWeight.SemiBold)
+                        Text(if (streak.days == 1) "day" else "days", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.ink)
+                    }
                 }
             }
         }
