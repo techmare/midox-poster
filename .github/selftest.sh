@@ -153,6 +153,19 @@ pass() {  # pass <suffix>: every screen once, by day or at night
   snap "09b-posted-noted$s"
   taptext "Settings"; sleep 4
   snap "10-settings$s"
+  # Good day up to 10: the second "More" (+) button is Good day's. Two digits must show whole.
+  if [ -z "$s" ]; then
+    A shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1; A pull /sdcard/ui.xml /tmp/ui.xml > /dev/null 2>&1
+    xy=$(python3 -c "
+import re
+x=open('/tmp/ui.xml',encoding='utf-8').read()
+m=[n for n in re.findall(r'<node [^>]*>',x) if 'content-desc=\"More\"' in n]
+b=list(map(int,re.search(r'bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"',m[1]).groups())) if len(m)>1 else None
+print((b[0]+b[2])//2,(b[1]+b[3])//2) if b else print('')
+")
+    for i in 1 2 3 4 5 6 7 8 9; do [ -n "$xy" ] && A shell input tap $xy; sleep 0.4; done
+    sleep 2; snap "10a-settings-goal-10"
+  fi
   up; snap "10b-settings$s"
   up; snap "10c-settings$s"
   taptext "Try the alarm now"; sleep 6

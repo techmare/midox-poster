@@ -516,7 +516,8 @@ fun Stepper(value: Int, onChange: (Int) -> Unit) {
     val h = rememberHaptics()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StepButton("−", "Less") { h.tick(); onChange(value - 1) }
-        Box(Modifier.width(18.dp), contentAlignment = Alignment.Center) { Rolling("$value", 17.sp, C.ink) }
+        // Wide enough for two digits: "10" was cut to "1".
+        Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) { Rolling("$value", 17.sp, C.ink) }
         StepButton("+", "More") { h.tick(); onChange(value + 1) }
     }
 }

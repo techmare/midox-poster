@@ -2,6 +2,10 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.7: 10 shows as 10 · 19 Nov 2026
+
+- **Settings › Good day showed "1" when it was set to 10**: the number's box only had room for one digit. Now it fits two.
+
 ## 1.0.6: Everything from the review, fixed · 18 Nov 2026
 
 - **Never a blank screen at start:** if Android skips the splash, the screens show anyway after 2.5 s.
