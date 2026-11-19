@@ -2,6 +2,11 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.8: A quicker opening, with a moving arrow · 19 Nov 2026
+
+- **The opening is about a third faster** (about 0.9 s from the splash to the app).
+- **The logo's arrow moves:** it slides into the ring, pulls back with it, then shoots off forward as the ring opens onto the app.
+
 ## 1.0.7: 10 shows as 10 · 19 Nov 2026
 
 - **Settings › Good day showed "1" when it was set to 10**: the number's box only had room for one digit. Now it fits two.

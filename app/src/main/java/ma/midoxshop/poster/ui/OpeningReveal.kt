@@ -27,11 +27,12 @@ import kotlin.math.pow
 /**
  * The opening animation, when Poster is opened from its icon (Android 12 and up), built like Midox's.
  *
- * The splash screen is Poster's ring on the page colour (res/drawable/splash_logo.xml). Instead of
- * letting Android fade it away, Poster takes that very splash and flies through the ring: it pulls back
- * a little, then rushes forward; the middle of the ring clears into a window, the app is seen through
- * it with the ring as its frame, and the ring keeps growing until the window is bigger than the screen.
- * The app behind settles from 94% as it comes through (LaunchSettle). One soft buzz as it starts forward.
+ * The splash screen is Poster's ring on the page colour (res/drawable/splash_logo.xml, the ring alone).
+ * Instead of letting Android fade it away, Poster takes that very splash and plays the logo: its arrow
+ * slides into the ring; ring and arrow pull back a little together; then the arrow shoots off forward as
+ * the ring rushes at you, its middle clearing into a window onto the app, and keeps growing until the
+ * window is bigger than the screen. The app behind settles from 94% as it comes through (LaunchSettle).
+ * One soft buzz as it starts forward. About 0.9 s from the splash to the app.
  */
 @RequiresApi(31)
 fun playOpening(splash: SplashScreenView, onForward: () -> Unit) {
@@ -52,9 +53,15 @@ fun playOpening(splash: SplashScreenView, onForward: () -> Unit) {
     val face = logo.width * RING_INSIDE
     val through = 1.05f * hypot(max(cx, splash.width - cx), max(cy, splash.height - cy)) / face
 
+    // The arrow is drawn here, not in the splash picture, so it can move on its own. Under the window,
+    // so the window erases it as it opens.
+    val unit = logo.width / 108f
+    val arrow = ArrowView(splash.context, cx, cy, unit).apply { alpha = 0f; offset = -14f }
     val window = WindowHole(splash.context, cx, cy)
     splash.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-    splash.addView(window, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+    val full = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    splash.addView(arrow, full)
+    splash.addView(window, ViewGroup.LayoutParams(full))
 
     fun forward() {
         buzz(splash)
@@ -68,6 +75,11 @@ fun playOpening(splash: SplashScreenView, onForward: () -> Unit) {
                 val s = PULL * (through / PULL).pow(t.pow(1.3f))
                 logo.scaleX = s
                 logo.scaleY = s
+                // The arrow shoots off ahead in the first third: faster and faster, fading as it goes.
+                val a = (t / 0.32f).coerceAtMost(1f)
+                arrow.scale = s
+                arrow.offset = PULL_BACK + (ARROW_OFF - PULL_BACK) * a * a
+                arrow.alpha = 1f - ((t - 0.1f) / 0.22f).coerceIn(0f, 1f)
                 // A little turn as it comes, like the ring is spinning up.
                 logo.rotation = -40f * (1f - (1f - t).pow(3))
                 // The middle clears in the first fifth (the arrow goes with it), then the window simply is the ring.
@@ -82,10 +94,64 @@ fun playOpening(splash: SplashScreenView, onForward: () -> Unit) {
         }.start()
     }
 
-    whenCalm {
-        logo.animate().scaleX(PULL).scaleY(PULL).rotation(8f)
-            .setDuration(PULL_MS).setInterpolator(PathInterpolator(0.23f, 1f, 0.32f, 1f))
-            .withEndAction { forward() }.start()
+    // The arrow slides into the ring with a little overshoot, then both pull back and go.
+    ValueAnimator.ofFloat(0f, 1f).apply {
+        duration = ARROW_IN
+        interpolator = android.view.animation.OvershootInterpolator(1.6f)
+        addUpdateListener {
+            val t = it.animatedValue as Float
+            arrow.offset = -14f * (1f - t)
+            arrow.alpha = (t * 2.5f).coerceAtMost(1f)
+        }
+        addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                whenCalm {
+                    ValueAnimator.ofFloat(0f, 1f).apply {
+                        duration = PULL_MS
+                        interpolator = PathInterpolator(0.23f, 1f, 0.32f, 1f)
+                        addUpdateListener {
+                            val t = it.animatedValue as Float
+                            val s = 1f + (PULL - 1f) * t
+                            logo.scaleX = s; logo.scaleY = s; logo.rotation = 8f * t
+                            arrow.scale = s
+                            arrow.offset = PULL_BACK * t
+                        }
+                        addListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) = forward()
+                        })
+                    }.start()
+                }
+            }
+        })
+    }.start()
+}
+
+/**
+ * Poster's arrow, in splash_logo's 108 grid around the ring's middle: [offset] moves it along (in grid
+ * units), [scale] follows the ring. Its colour is the splash's (dark by day, white at night).
+ */
+private class ArrowView(context: Context, private val cx: Float, private val cy: Float, private val unit: Float) : View(context) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        color = context.getColor(ma.midoxshop.poster.R.color.splash_arrow)
+    }
+    private val path = android.graphics.Path()
+    var offset = 0f
+        set(value) { field = value; invalidate() }
+    var scale = 1f
+        set(value) { field = value; invalidate() }
+
+    override fun onDraw(canvas: Canvas) {
+        val u = unit * scale
+        paint.strokeWidth = 5f * u
+        val x = cx + offset * u
+        path.reset()
+        // M44,54 h20  M56,46 l8,8 -8,8 — around the middle at 54, 54.
+        path.moveTo(x - 10f * u, cy); path.lineTo(x + 10f * u, cy)
+        path.moveTo(x + 2f * u, cy - 8f * u); path.lineTo(x + 10f * u, cy); path.lineTo(x + 2f * u, cy + 8f * u)
+        canvas.drawPath(path, paint)
     }
 }
 
@@ -136,5 +202,9 @@ private fun whenCalm(then: () -> Unit) {
 // splash_logo.xml: a 108 square, the ring's inside edge 20.5 from the middle (radius 24, 7 wide).
 private const val RING_INSIDE = 20.5f / 108f
 private const val PULL = 0.86f
-private const val PULL_MS = 200L
-private const val OPEN = 820L
+private const val ARROW_IN = 180L
+private const val PULL_MS = 140L
+private const val OPEN = 600L
+/** How far the arrow draws back as the ring pulls back, and how far it shoots off (grid units). */
+private const val PULL_BACK = -5f
+private const val ARROW_OFF = 70f

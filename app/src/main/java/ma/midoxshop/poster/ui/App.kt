@@ -102,7 +102,7 @@ private data class DonePlace(val id: String) : Place { override val depth = 2 }
  */
 @Composable
 fun LaunchSettle(content: @Composable () -> Unit) {
-    val s by animateFloatAsState(if (Launch.ready) 1f else 0.94f, tween(700, easing = Motion.EaseOut), label = "settle")
+    val s by animateFloatAsState(if (Launch.ready) 1f else 0.94f, tween(520, easing = Motion.EaseOut), label = "settle")
     Box(Modifier.fillMaxSize().graphicsLayer { scaleX = s; scaleY = s }) { content() }
 }
 
