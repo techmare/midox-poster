@@ -121,6 +121,14 @@ pass() {  # pass <suffix>: every screen once, by day or at night
   sleep 10
   snap "01-today$s"
   up; snap "01b-today-scrolled$s"
+  # A product with no photo: Take a photo / From gallery send one to Midox. The gallery button opens Android's picker.
+  A shell am force-stop $PKG
+  A shell am start -n $PKG/.MainActivity --es pid sigma
+  sleep 8
+  snap "02a-post-no-photo$s"
+  taptext "From gallery"; sleep 4
+  snap "02b-gallery-picker$s"
+  A shell input keyevent KEYCODE_BACK; sleep 2
   # Post mode on the first pick.
   A shell am force-stop $PKG
   A shell am start -n $PKG/.MainActivity --es go post

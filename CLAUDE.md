@@ -8,6 +8,8 @@ button, a streak, nags that get louder until today's post is up. Used on the own
 
 - Products and photos come from **Midox** (`ma.midoxshop.prices`, repo techmare/midox-app) through its
   signature-protected `CatalogProvider`, so Poster is signed with the same key (`app/midox-release.jks`).
+  The one write back: a photo for a product that has none (`Midox.addPhoto`: written to `incoming/`, then
+  `call("add_photo")`; Midox 3.0.29+). Only photos, never names or prices.
 - **Nothing touches Facebook**: Poster only opens the new-listing page and copies text. No overlay,
   no paste bubble, no automation (risk to the owner's account; the owner said no).
 - Posts: price always 1 DH, no price in the text, no shop name; text in French. App text in English.

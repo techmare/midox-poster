@@ -7,6 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -145,9 +151,48 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
     }
     val wait = rememberWait()
 
-    LaunchedEffect(item.id) {
-        Store.startPost(ctx)
-        inGallery = if (item.pics.isEmpty() || !Album.works()) 0 else withContext(Dispatchers.IO) { Album.put(ctx, item) }
+    // A photo you add here goes into Midox for good, and into this post right away.
+    var added by remember(item.id) { mutableStateOf(listOf<String>()) }
+    val shown = if (added.isEmpty()) item else item.copy(pics = (item.pics + added).distinct())
+    var sending by remember(item.id) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    fun send(photo: Uri, then: () -> Unit = {}) {
+        sending = true
+        scope.launch {
+            val (sent, name) = withContext(Dispatchers.IO) { Midox.addPhoto(ctx, item.id, photo) }
+            then()
+            sending = false
+            if (name != null) { added = added + name; haptics.done() }
+            Toast.makeText(ctx, when (sent) {
+                Midox.Sent.ADDED -> "Saved in Midox too"
+                Midox.Sent.OLD_MIDOX -> "Update Midox to add photos from Poster"
+                Midox.Sent.FULL -> "This product already has 6 photos in Midox"
+                Midox.Sent.GONE -> "This product isn't in Midox any more"
+                Midox.Sent.BAD_PHOTO -> "Couldn't read that photo. Try another one."
+            }, Toast.LENGTH_SHORT).show()
+        }
+    }
+    // The camera app saves the photo in Poster's own folder; kept across a restart, in case Android closes Poster meanwhile.
+    var shot by rememberSaveable(item.id) { mutableStateOf<String?>(null) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val file = shot?.let { java.io.File(it) }
+        if (ok && file != null && file.length() > 0) send(Uri.fromFile(file)) { file.delete() } else file?.delete()
+    }
+    val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) send(uri) }
+    fun takePhoto() {
+        val dir = java.io.File(ctx.cacheDir, "shots").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val file = java.io.File(dir, "shot-${System.currentTimeMillis()}.jpg")
+        shot = file.path
+        try { camera.launch(FileProvider.getUriForFile(ctx, ctx.packageName + ".files", file)) }
+        catch (e: ActivityNotFoundException) { Toast.makeText(ctx, "No camera app found", Toast.LENGTH_SHORT).show() }
+    }
+
+    LaunchedEffect(item.id) { Store.startPost(ctx) }
+    // Again when a photo is added, so it's in the gallery for Facebook too.
+    LaunchedEffect(item.id, shown.pics.size) {
+        inGallery = -1
+        inGallery = if (shown.pics.isEmpty() || !Album.works()) 0 else withContext(Dispatchers.IO) { Album.put(ctx, shown) }
     }
 
     Column(Modifier.fillMaxSize().background(C.ground).statusBarsPadding().navigationBarsPadding()) {
@@ -171,22 +216,35 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
         }
 
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            if (item.pics.isEmpty()) {
-                Box(
-                    Modifier.padding(20.dp).pop().fillMaxWidth().height(150.dp).clip(Corners.Big).background(C.accentSoft),
-                    contentAlignment = Alignment.Center
+            if (shown.pics.isEmpty()) {
+                Column(
+                    Modifier.padding(20.dp).pop().fillMaxWidth().clip(Corners.Big).background(C.accentSoft).padding(horizontal = 18.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Camera, C.accentText, 28.dp)
-                        Text("No photo in Midox yet.\nTake one with the camera in Facebook.", color = C.accentInk, fontSize = 14.sp, textAlign = TextAlign.Center)
+                    Icon(Icons.Camera, C.accentText, 28.dp)
+                    AnimatedContent(
+                        targetState = sending, label = "sending",
+                        transitionSpec = { fadeIn(tween(Motion.QUICK)) togetherWith fadeOut(tween(Motion.QUICK / 2)) }
+                    ) { busy ->
+                        Text(
+                            if (busy) "Saving the photo in Midox…" else "No photo in Midox yet.\nAdd one: it goes into Midox too.",
+                            color = C.accentInk, fontSize = 14.sp, textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        InkButton("Take a photo", Modifier.weight(1f).heightIn(min = 48.dp)) { if (!sending) { haptics.tick(); takePhoto() } }
+                        InkButton("From gallery", Modifier.weight(1f).heightIn(min = 48.dp)) {
+                            if (!sending) { haptics.tick(); gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+                        }
                     }
                 }
             } else {
                 LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    itemsIndexed(item.pics) { i, pic ->
+                    itemsIndexed(shown.pics) { i, pic ->
                         AsyncImage(
                             Midox.photo(pic), null, contentScale = ContentScale.Crop,
-                            modifier = Modifier.enter(i, rise = 30.dp, key = pic).size(if (item.pics.size == 1) 350.dp else 230.dp, 220.dp).clip(Corners.Big).background(C.tonal)
+                            modifier = Modifier.enter(i, rise = 30.dp, key = pic).size(if (shown.pics.size == 1) 350.dp else 230.dp, 220.dp).clip(Corners.Big).background(C.tonal)
                         )
                     }
                 }
@@ -195,7 +253,7 @@ fun PostScreen(data: Data, item: Item, onClose: () -> Unit, onPosted: () -> Unit
                 Text(title, fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = C.ink, lineHeight = 27.sp)
                 AnimatedContent(
                     targetState = when {
-                        item.pics.isEmpty() -> "No photos to put in the gallery"
+                        shown.pics.isEmpty() -> "No photos to put in the gallery"
                         !Album.works() -> "Photos: pick them from the Midox album"
                         inGallery < 0 -> "Putting the photos in your gallery…"
                         else -> "$inGallery photo" + (if (inGallery == 1) " is" else "s are") + " first in your gallery"

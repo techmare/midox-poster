@@ -2,6 +2,11 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.10: Add a photo to a product that has none · 24 Nov 2026
+
+- **"Take a photo" and "From gallery"** on a product without a photo. The photo goes into Midox, on that product, so Midox fills up with photos as you post. It also goes straight into this post and your gallery, ready for Facebook.
+- Needs Midox 3.0.29 or newer; an older Midox says to update it.
+
 ## 1.0.9: Photos or not, all products get their turn · 24 Nov 2026
 
 - **Products without a photo aren't kept for last any more:** the picks mix products with and without photos equally, in a new order every day. What got messages and what waited longest still come first.

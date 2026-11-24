@@ -10,7 +10,8 @@ import android.provider.MediaStore
 
 /**
  * Midox is where the products live: Poster reads them, with their photos, from Midox's catalog
- * (only apps signed with the shop's key may). Nothing is ever written back.
+ * (only apps signed with the shop's key may). The one thing written back: a photo for a product that
+ * has none ([addPhoto]), so posting fills Midox with photos too.
  */
 object Midox {
     const val PACKAGE = "ma.midoxshop.prices"
@@ -82,6 +83,33 @@ object Midox {
             m
         }
     }.getOrNull()?.takeIf { it.containsKey("posted") }
+
+    /** What happened to a photo sent to Midox. */
+    enum class Sent { ADDED, OLD_MIDOX, FULL, GONE, BAD_PHOTO }
+
+    /**
+     * Sends a photo taken or picked in Poster to Midox, for product [pid]: written to Midox's incoming
+     * folder, then added to the product (Midox turns it upright and resizes it, like its own). Returns
+     * what happened and, when added, the photo's name in Midox. Slow: call it off the main thread.
+     */
+    fun addPhoto(ctx: Context, pid: String, from: Uri): Pair<Sent, String?> {
+        if (demo) return Sent.OLD_MIDOX to null
+        val cr = ctx.contentResolver
+        val bytes = runCatching { cr.openInputStream(from)!!.use { it.readBytes() } }.getOrNull()
+            ?.takeIf { it.isNotEmpty() } ?: return Sent.BAD_PHOTO to null
+        val file = java.util.UUID.randomUUID().toString().replace("-", "") + ".jpg"
+        // A Midox from before 3.0.29 has no incoming folder: writing fails, so it needs an update.
+        runCatching { cr.openOutputStream(Uri.parse("$BASE/incoming/$file"), "w")!!.use { it.write(bytes) } }
+            .onFailure { return Sent.OLD_MIDOX to null }
+        val answer = runCatching { cr.call(Uri.parse(BASE), "add_photo", pid, android.os.Bundle().apply { putString("file", file) }) }
+            .getOrNull() ?: return Sent.OLD_MIDOX to null
+        answer.getString("name")?.let { return Sent.ADDED to it }
+        return when (answer.getString("error")) {
+            "full" -> Sent.FULL
+            "no_product" -> Sent.GONE
+            else -> Sent.BAD_PHOTO
+        } to null
+    }
 
     fun open(ctx: Context) {
         ctx.packageManager.getLaunchIntentForPackage(PACKAGE)?.let { ctx.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
