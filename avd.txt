@@ -1,0 +1,4 @@
+Loading local repository...                                                     [=========                              ] 25% Loading local repository...       Auto-selecting single ABI x86_64
+check
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       145G   56G   89G  39% /

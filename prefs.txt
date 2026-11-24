@@ -1,0 +1,14 @@
++ timeout 90 adb shell run-as ma.midoxshop.poster cat shared_prefs/poster.xml
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="goal" value="10" />
+    <string name="interest">{&quot;d750&quot;:&quot;1&quot;}</string>
+    <string name="album">content://media/external/images/media/1000000025</string>
+    <string name="counts">{&quot;2026-11-24&quot;:&quot;1&quot;}</string>
+    <string name="interest_day">{&quot;d750&quot;:&quot;2026-11-24&quot;}</string>
+    <string name="album_pid">v1</string>
+    <boolean name="demo" value="true" />
+    <long name="post_start" value="1795525322701" />
+    <long name="last_post_at" value="1795525018800" />
+    <string name="posted">{&quot;d750&quot;:&quot;2026-11-24&quot;}</string>
+</map>

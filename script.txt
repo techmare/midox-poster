@@ -1,0 +1,923 @@
++ PKG=ma.midoxshop.poster
++ mkdir -p shots
++ A shell settings put global hide_error_dialogs 1
++ timeout 90 adb shell settings put global hide_error_dialogs 1
++ A devices
++ timeout 90 adb devices
+List of devices attached
+emulator-5554	device
+
++ A shell getprop sys.boot_completed
++ timeout 90 adb shell getprop sys.boot_completed
+1
++ A install -r app/build/outputs/apk/debug/app-debug.apk
++ timeout 90 adb install -r app/build/outputs/apk/debug/app-debug.apk
+Performing Streamed Install
+Success
++ A shell pm grant ma.midoxshop.poster android.permission.POST_NOTIFICATIONS
++ timeout 90 adb shell pm grant ma.midoxshop.poster android.permission.POST_NOTIFICATIONS
++ A shell am start -n ma.midoxshop.poster/.MainActivity
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity }
++ sleep 12
++ snap 00-no-midox
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell appops set ma.midoxshop.poster SYSTEM_ALERT_WINDOW allow
++ timeout 90 adb shell appops set ma.midoxshop.poster SYSTEM_ALERT_WINDOW allow
++ A shell appops set ma.midoxshop.poster SCHEDULE_EXACT_ALARM allow
++ timeout 90 adb shell appops set ma.midoxshop.poster SCHEDULE_EXACT_ALARM allow
++ A shell appops set ma.midoxshop.poster USE_FULL_SCREEN_INTENT allow
++ timeout 90 adb shell appops set ma.midoxshop.poster USE_FULL_SCREEN_INTENT allow
++ pass ''
++ local s=
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --ez demo true
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --ez demo true
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 10
++ snap 01-today
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 01b-today-scrolled
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --es pid sigma
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --es pid sigma
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 8
++ snap 02a-post-no-photo
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'From gallery'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'From gallery'
++ xy='765 699'
++ echo 'taptext '\''From gallery'\'' -> 765 699'
+taptext 'From gallery' -> 765 699
++ '[' -n '765 699' ']'
++ A shell input tap 765 699
++ timeout 90 adb shell input tap 765 699
++ sleep 4
++ snap 02b-gallery-picker
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell input keyevent KEYCODE_BACK
++ timeout 90 adb shell input keyevent KEYCODE_BACK
++ sleep 2
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --es go post
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --es go post
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 8
++ snap 02-post
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Titre
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Titre
++ xy='132 1348'
++ echo 'taptext '\''Titre'\'' -> 132 1348'
+taptext 'Titre' -> 132 1348
++ '[' -n '132 1348' ']'
++ A shell input tap 132 1348
++ timeout 90 adb shell input tap 132 1348
++ sleep 2
++ snap 03-post-copied
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 03b-post-bottom
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Open Marketplace'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Open Marketplace'
++ xy='501 2053'
++ echo 'taptext '\''Open Marketplace'\'' -> 501 2053'
+taptext 'Open Marketplace' -> 501 2053
++ '[' -n '501 2053' ']'
++ A shell input tap 501 2053
++ timeout 90 adb shell input tap 501 2053
++ sleep 4
++ snap 04-after-open
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell am start -n ma.midoxshop.poster/.MainActivity
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity }
+Warning: Activity not started, its current task has been brought to the front
++ sleep 4
++ snap 04b-back-in-post
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'I posted it'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'I posted it'
++ xy='540 2053'
++ echo 'taptext '\''I posted it'\'' -> 540 2053'
+taptext 'I posted it' -> 540 2053
++ '[' -n '540 2053' ']'
++ A shell input tap 540 2053
++ timeout 90 adb shell input tap 540 2053
++ sleep 5
++ snap 05-done
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'I'\''m done for today'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'I'\''m done for today'
++ xy='540 2057'
++ echo 'taptext '\''I'\''m done for today'\'' -> 540 2057'
+taptext 'I'm done for today' -> 540 2057
++ '[' -n '540 2057' ']'
++ A shell input tap 540 2057
++ timeout 90 adb shell input tap 540 2057
++ sleep 4
++ snap 06-today-after
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Next post in'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Next post in'
++ xy='540 877'
++ echo 'taptext '\''Next post in'\'' -> 540 877'
+taptext 'Next post in' -> 540 877
++ '[' -n '540 877' ']'
++ A shell input tap 540 877
++ timeout 90 adb shell input tap 540 877
++ sleep 5
++ snap 07-post-waiting
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell input keyevent KEYCODE_BACK
++ timeout 90 adb shell input keyevent KEYCODE_BACK
++ sleep 3
++ taptext Queue
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Queue
++ xy='405 2287'
++ echo 'taptext '\''Queue'\'' -> 405 2287'
+taptext 'Queue' -> 405 2287
++ '[' -n '405 2287' ']'
++ A shell input tap 405 2287
++ timeout 90 adb shell input tap 405 2287
++ sleep 4
++ snap 08-queue
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Sat
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Sat
++ xy='678 421'
++ echo 'taptext '\''Sat'\'' -> 678 421'
+taptext 'Sat' -> 678 421
++ '[' -n '678 421' ']'
++ A shell input tap 678 421
++ timeout 90 adb shell input tap 678 421
++ sleep 3
++ snap 08b-queue-day
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Posted
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Posted
++ xy='675 2287'
++ echo 'taptext '\''Posted'\'' -> 675 2287'
+taptext 'Posted' -> 675 2287
++ '[' -n '675 2287' ']'
++ A shell input tap 675 2287
++ timeout 90 adb shell input tap 675 2287
++ sleep 4
++ snap 09-posted
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Live
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Live
++ xy='226 368'
++ echo 'taptext '\''Live'\'' -> 226 368'
+taptext 'Live' -> 226 368
++ '[' -n '226 368' ']'
++ A shell input tap 226 368
++ timeout 90 adb shell input tap 226 368
++ sleep 3
++ taptext 'Got messages'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Got messages'
++ xy='314 748'
++ echo 'taptext '\''Got messages'\'' -> 314 748'
+taptext 'Got messages' -> 314 748
++ '[' -n '314 748' ']'
++ A shell input tap 314 748
++ timeout 90 adb shell input tap 314 748
++ sleep 2
++ snap 09b-posted-noted
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Settings
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Settings
++ xy='945 2287'
++ echo 'taptext '\''Settings'\'' -> 945 2287'
+taptext 'Settings' -> 945 2287
++ '[' -n '945 2287' ']'
++ A shell input tap 945 2287
++ timeout 90 adb shell input tap 945 2287
++ sleep 4
++ snap 10-settings
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ '[' -z '' ']'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
+++ python3 -c $'\nimport re\nx=open(\'/tmp/ui.xml\',encoding=\'utf-8\').read()\nm=[n for n in re.findall(r\'<node [^>]*>\',x) if \'content-desc="More"\' in n]\nb=list(map(int,re.search(r\'bounds="\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]"\',m[1]).groups())) if len(m)>1 else None\nprint((b[0]+b[2])//2,(b[1]+b[3])//2) if b else print(\'\')\n'
++ xy='917 673'
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ for i in 1 2 3 4 5 6 7 8 9
++ '[' -n '917 673' ']'
++ A shell input tap 917 673
++ timeout 90 adb shell input tap 917 673
++ sleep 0.4
++ sleep 2
++ snap 10a-settings-goal-10
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 10b-settings
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 10c-settings
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Try the alarm now'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Try the alarm now'
++ xy='540 1239'
++ echo 'taptext '\''Try the alarm now'\'' -> 540 1239'
+taptext 'Try the alarm now' -> 540 1239
++ '[' -n '540 1239' ']'
++ A shell input tap 540 1239
++ timeout 90 adb shell input tap 540 1239
++ sleep 6
++ snap 11-alarm
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Close
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Close
++ xy='540 2158'
++ echo 'taptext '\''Close'\'' -> 540 2158'
+taptext 'Close' -> 540 2158
++ '[' -n '540 2158' ']'
++ A shell input tap 540 2158
++ timeout 90 adb shell input tap 540 2158
++ sleep 3
++ A shell cmd uimode night yes
++ timeout 90 adb shell cmd uimode night yes
+Night mode: yes
++ sleep 3
++ pass -dark
++ local s=-dark
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --ez demo true
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --ez demo true
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 10
++ snap 01-today-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 01b-today-scrolled-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --es pid sigma
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --es pid sigma
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 8
++ snap 02a-post-no-photo-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'From gallery'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'From gallery'
++ xy='765 699'
++ echo 'taptext '\''From gallery'\'' -> 765 699'
+taptext 'From gallery' -> 765 699
++ '[' -n '765 699' ']'
++ A shell input tap 765 699
++ timeout 90 adb shell input tap 765 699
++ sleep 4
++ snap 02b-gallery-picker-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell input keyevent KEYCODE_BACK
++ timeout 90 adb shell input keyevent KEYCODE_BACK
++ sleep 2
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ A shell am start -n ma.midoxshop.poster/.MainActivity --es go post
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity --es go post
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity (has extras) }
++ sleep 8
++ snap 02-post-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Titre
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Titre
++ xy='132 1287'
++ echo 'taptext '\''Titre'\'' -> 132 1287'
+taptext 'Titre' -> 132 1287
++ '[' -n '132 1287' ']'
++ A shell input tap 132 1287
++ timeout 90 adb shell input tap 132 1287
++ sleep 2
++ snap 03-post-copied-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 03b-post-bottom-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Open Marketplace'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Open Marketplace'
++ xy=
++ echo 'taptext '\''Open Marketplace'\'' -> '
+taptext 'Open Marketplace' -> 
++ '[' -n '' ']'
++ sleep 4
++ snap 04-after-open-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell am start -n ma.midoxshop.poster/.MainActivity
++ timeout 90 adb shell am start -n ma.midoxshop.poster/.MainActivity
+Starting: Intent { cmp=ma.midoxshop.poster/.MainActivity }
+Warning: Activity not started, intent has been delivered to currently running top-most instance.
++ sleep 4
++ snap 04b-back-in-post-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'I posted it'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'I posted it'
++ xy=
++ echo 'taptext '\''I posted it'\'' -> '
+taptext 'I posted it' -> 
++ '[' -n '' ']'
++ sleep 5
++ snap 05-done-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'I'\''m done for today'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'I'\''m done for today'
++ xy=
++ echo 'taptext '\''I'\''m done for today'\'' -> '
+taptext 'I'm done for today' -> 
++ '[' -n '' ']'
++ sleep 4
++ snap 06-today-after-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Next post in'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Next post in'
++ xy=
++ echo 'taptext '\''Next post in'\'' -> '
+taptext 'Next post in' -> 
++ '[' -n '' ']'
++ sleep 5
++ snap 07-post-waiting-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell input keyevent KEYCODE_BACK
++ timeout 90 adb shell input keyevent KEYCODE_BACK
++ sleep 3
++ taptext Queue
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Queue
++ xy='405 2287'
++ echo 'taptext '\''Queue'\'' -> 405 2287'
+taptext 'Queue' -> 405 2287
++ '[' -n '405 2287' ']'
++ A shell input tap 405 2287
++ timeout 90 adb shell input tap 405 2287
++ sleep 4
++ snap 08-queue-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Sat
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Sat
++ xy='678 421'
++ echo 'taptext '\''Sat'\'' -> 678 421'
+taptext 'Sat' -> 678 421
++ '[' -n '678 421' ']'
++ A shell input tap 678 421
++ timeout 90 adb shell input tap 678 421
++ sleep 3
++ snap 08b-queue-day-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Posted
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Posted
++ xy='675 2287'
++ echo 'taptext '\''Posted'\'' -> 675 2287'
+taptext 'Posted' -> 675 2287
++ '[' -n '675 2287' ']'
++ A shell input tap 675 2287
++ timeout 90 adb shell input tap 675 2287
++ sleep 4
++ snap 09-posted-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Live
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Live
++ xy='226 368'
++ echo 'taptext '\''Live'\'' -> 226 368'
+taptext 'Live' -> 226 368
++ '[' -n '226 368' ']'
++ A shell input tap 226 368
++ timeout 90 adb shell input tap 226 368
++ sleep 3
++ taptext 'Got messages'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Got messages'
++ xy=
++ echo 'taptext '\''Got messages'\'' -> '
+taptext 'Got messages' -> 
++ '[' -n '' ']'
++ sleep 2
++ snap 09b-posted-noted-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Settings
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Settings
++ xy='945 2287'
++ echo 'taptext '\''Settings'\'' -> 945 2287'
+taptext 'Settings' -> 945 2287
++ '[' -n '945 2287' ']'
++ A shell input tap 945 2287
++ timeout 90 adb shell input tap 945 2287
++ sleep 4
++ snap 10-settings-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ '[' -z -dark ']'
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 10b-settings-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ up
++ A shell input swipe 540 1700 540 700 500
++ timeout 90 adb shell input swipe 540 1700 540 700 500
++ sleep 2
++ snap 10c-settings-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext 'Try the alarm now'
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - 'Try the alarm now'
++ xy='540 1239'
++ echo 'taptext '\''Try the alarm now'\'' -> 540 1239'
+taptext 'Try the alarm now' -> 540 1239
++ '[' -n '540 1239' ']'
++ A shell input tap 540 1239
++ timeout 90 adb shell input tap 540 1239
++ sleep 6
++ snap 11-alarm-dark
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ taptext Close
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ local xy
+++ python3 - Close
++ xy='540 2158'
++ echo 'taptext '\''Close'\'' -> 540 2158'
+taptext 'Close' -> 540 2158
++ '[' -n '540 2158' ']'
++ A shell input tap 540 2158
++ timeout 90 adb shell input tap 540 2158
++ sleep 3
++ A shell cmd uimode night no
++ timeout 90 adb shell cmd uimode night no
+Night mode: no
++ sleep 2
++ for mode in no yes
++ A shell cmd uimode night no
++ timeout 90 adb shell cmd uimode night no
+Night mode: no
++ sleep 3
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ sleep 2
++ timeout 30 adb shell screenrecord --time-limit 8 /sdcard/launch.mp4
++ A shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ma.midoxshop.poster/.MainActivity
++ timeout 90 adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ma.midoxshop.poster/.MainActivity
+Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=ma.midoxshop.poster/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: ma.midoxshop.poster/.MainActivity
+TotalTime: 3358
+WaitTime: 3438
+Complete
++ wait
+++ '[' no = yes ']'
+++ echo light
++ A pull /sdcard/launch.mp4 shots/launch-light.mp4
++ timeout 90 adb pull /sdcard/launch.mp4 shots/launch-light.mp4
+/sdcard/launch.mp4: 1 file pulled, 0 skipped. 108.4 MB/s (909446 bytes in 0.008s)
++ for mode in no yes
++ A shell cmd uimode night yes
++ timeout 90 adb shell cmd uimode night yes
+Night mode: yes
++ sleep 3
++ A shell am force-stop ma.midoxshop.poster
++ timeout 90 adb shell am force-stop ma.midoxshop.poster
++ sleep 2
++ timeout 30 adb shell screenrecord --time-limit 8 /sdcard/launch.mp4
++ A shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ma.midoxshop.poster/.MainActivity
++ timeout 90 adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ma.midoxshop.poster/.MainActivity
+Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=ma.midoxshop.poster/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: ma.midoxshop.poster/.MainActivity
+TotalTime: 2218
+WaitTime: 2220
+Complete
++ wait
+++ '[' yes = yes ']'
+++ echo dark
++ A pull /sdcard/launch.mp4 shots/launch-dark.mp4
++ timeout 90 adb pull /sdcard/launch.mp4 shots/launch-dark.mp4
+/sdcard/launch.mp4: 1 file pulled, 0 skipped. 114.4 MB/s (710313 bytes in 0.006s)
++ A shell cmd uimode night no
++ timeout 90 adb shell cmd uimode night no
+Night mode: no
++ sleep 4
++ snap 12-after-opening
++ undialog
++ A shell uiautomator dump /sdcard/ui.xml
++ A pull /sdcard/ui.xml /tmp/ui.xml
++ grep -q 'isn'\''t responding\|isn&apos;t responding' /tmp/ui.xml
++ A exec-out screencap -p
++ timeout 90 adb exec-out screencap -p
++ A shell run-as ma.midoxshop.poster cat shared_prefs/poster.xml
++ A logcat -d -s AndroidRuntime:E
++ timeout 90 adb logcat -d -s AndroidRuntime:E
++ ls -la shots
+total 10116
+drwxr-xr-x 2 runner runner   4096 Nov 24 13:02 .
+drwxr-xr-x 9 runner runner   4096 Nov 24 12:53 ..
+-rw-r--r-- 1 runner runner 209013 Nov 24 12:55 00-no-midox.png
+-rw-r--r-- 1 runner runner 200276 Nov 24 12:59 01-today-dark.png
+-rw-r--r-- 1 runner runner 209411 Nov 24 12:55 01-today.png
+-rw-r--r-- 1 runner runner 224143 Nov 24 12:59 01b-today-scrolled-dark.png
+-rw-r--r-- 1 runner runner 202968 Nov 24 12:55 01b-today-scrolled.png
+-rw-r--r-- 1 runner runner 194973 Nov 24 12:59 02-post-dark.png
+-rw-r--r-- 1 runner runner 186948 Nov 24 12:56 02-post.png
+-rw-r--r-- 1 runner runner 193789 Nov 24 12:59 02a-post-no-photo-dark.png
+-rw-r--r-- 1 runner runner 188972 Nov 24 12:55 02a-post-no-photo.png
+-rw-r--r-- 1 runner runner  89414 Nov 24 12:59 02b-gallery-picker-dark.png
+-rw-r--r-- 1 runner runner  92711 Nov 24 12:56 02b-gallery-picker.png
+-rw-r--r-- 1 runner runner 220779 Nov 24 12:59 03-post-copied-dark.png
+-rw-r--r-- 1 runner runner 211061 Nov 24 12:56 03-post-copied.png
+-rw-r--r-- 1 runner runner 199778 Nov 24 13:00 03b-post-bottom-dark.png
+-rw-r--r-- 1 runner runner 197115 Nov 24 12:56 03b-post-bottom.png
+-rw-r--r-- 1 runner runner 199471 Nov 24 13:00 04-after-open-dark.png
+-rw-r--r-- 1 runner runner  89444 Nov 24 12:56 04-after-open.png
+-rw-r--r-- 1 runner runner 199155 Nov 24 13:00 04b-back-in-post-dark.png
+-rw-r--r-- 1 runner runner 194363 Nov 24 12:56 04b-back-in-post.png
+-rw-r--r-- 1 runner runner 199146 Nov 24 13:00 05-done-dark.png
+-rw-r--r-- 1 runner runner 112897 Nov 24 12:57 05-done.png
+-rw-r--r-- 1 runner runner 199441 Nov 24 13:00 06-today-after-dark.png
+-rw-r--r-- 1 runner runner 203261 Nov 24 12:57 06-today-after.png
+-rw-r--r-- 1 runner runner 198283 Nov 24 13:00 07-post-waiting-dark.png
+-rw-r--r-- 1 runner runner 194523 Nov 24 12:57 07-post-waiting.png
+-rw-r--r-- 1 runner runner 223247 Nov 24 13:00 08-queue-dark.png
+-rw-r--r-- 1 runner runner 174284 Nov 24 12:57 08-queue.png
+-rw-r--r-- 1 runner runner 107646 Nov 24 13:01 08b-queue-day-dark.png
+-rw-r--r-- 1 runner runner 108873 Nov 24 12:57 08b-queue-day.png
+-rw-r--r-- 1 runner runner  94435 Nov 24 13:01 09-posted-dark.png
+-rw-r--r-- 1 runner runner  92787 Nov 24 12:57 09-posted.png
+-rw-r--r-- 1 runner runner  94435 Nov 24 13:01 09b-posted-noted-dark.png
+-rw-r--r-- 1 runner runner  96800 Nov 24 12:58 09b-posted-noted.png
+-rw-r--r-- 1 runner runner 190214 Nov 24 13:01 10-settings-dark.png
+-rw-r--r-- 1 runner runner 195616 Nov 24 12:58 10-settings.png
+-rw-r--r-- 1 runner runner 195881 Nov 24 12:58 10a-settings-goal-10.png
+-rw-r--r-- 1 runner runner 199659 Nov 24 13:01 10b-settings-dark.png
+-rw-r--r-- 1 runner runner 210430 Nov 24 12:58 10b-settings.png
+-rw-r--r-- 1 runner runner 205457 Nov 24 13:01 10c-settings-dark.png
+-rw-r--r-- 1 runner runner 209651 Nov 24 12:58 10c-settings.png
+-rw-r--r-- 1 runner runner 624572 Nov 24 13:01 11-alarm-dark.png
+-rw-r--r-- 1 runner runner 701534 Nov 24 12:58 11-alarm.png
+-rw-r--r-- 1 runner runner 202129 Nov 24 13:02 12-after-opening.png
+-rw-r--r-- 1 runner runner    290 Nov 24 12:54 avd.txt
+-rw-r--r-- 1 runner runner      2 Nov 24 12:54 boot.txt
+-rw-r--r-- 1 runner runner   2812 Nov 24 12:53 build.txt
+-rw-r--r-- 1 runner runner      0 Nov 24 13:02 crashes.txt
+-rw-r--r-- 1 runner runner     89 Nov 24 12:52 disk.txt
+-rw-r--r-- 1 runner runner  15633 Nov 24 12:56 emulator.txt
+-rw-r--r-- 1 runner runner     52 Nov 24 12:51 kvm.txt
+-rw-r--r-- 1 runner runner 710313 Nov 24 13:02 launch-dark.mp4
+-rw-r--r-- 1 runner runner 909446 Nov 24 13:02 launch-light.mp4
+-rw-r--r-- 1 runner runner    760 Nov 24 13:02 prefs.txt
+-rw-r--r-- 1 runner runner  28825 Nov 24 13:02 script.txt
+-rw-r--r-- 1 runner runner  16850 Nov 24 12:54 sdk.txt
