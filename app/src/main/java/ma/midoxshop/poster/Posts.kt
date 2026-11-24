@@ -32,8 +32,8 @@ object Days {
 
 /**
  * What to post, and the post itself, in French. The picks are Midox's old Sell › Marketplace picks:
- * photos first, the longest since posted first (never posted first of all), one per category where
- * possible, the same all day.
+ * the longest since posted first (never posted first of all), with or without photos mixed in
+ * equally, one per category where possible, the same all day.
  */
 object Posts {
     /** A product posted less than this many days ago is not suggested again; after it, it is "repost due". */
@@ -48,6 +48,13 @@ object Posts {
     /** Milliseconds until the next post is OK, or 0. */
     fun waitLeft(lastPostAt: Long, now: Long): Long =
         if (lastPostAt <= 0L) 0L else (lastPostAt + GAP_MINUTES * 60_000L - now).coerceAtLeast(0L)
+
+    /** A shuffle key for [id] on [day]: the same all day, scattered from one day to the next. */
+    internal fun mix(id: String, day: String): Long {
+        var h = (id + "|" + day).hashCode().toLong() * -7046029254386353131L
+        h = h xor (h ushr 31); h *= -4658895280553007687L; h = h xor (h ushr 29)
+        return h
+    }
 
     /** The price typed on Marketplace: always 1 dh (0 shows as "Free"). Buyers ask for the real one. */
     const val LISTING_PRICE = "1"
@@ -80,23 +87,21 @@ object Posts {
         val pool = all
             .filter { it.id !in skipped && (posted[it.id] == null || posted[it.id]!! < rest) }
             .sortedWith(
-                compareBy<Item> { it.pics.isEmpty() }
-                    // What got messages last time sells: it comes back first.
-                    .thenByDescending { interest[it.id] ?: 0 }
+                // What got messages last time sells: it comes back first.
+                compareByDescending<Item> { interest[it.id] ?: 0 }
                     .thenBy { posted[it.id] ?: "" }
-                    .thenBy { (it.id + day).hashCode() }
+                    // A different, well-mixed order every day, so photo and no-photo products mix up.
+                    .thenBy { mix(it.id, day) }
             )
         val chosen = today.take(n).toMutableList()
         val cats = chosen.map { it.cat.lowercase() }.toMutableSet()
-        for (group in listOf(pool.filter { it.pics.isNotEmpty() }, pool.filter { it.pics.isEmpty() })) {
-            for (p in group) {
-                if (chosen.size >= n) break
-                if (p !in chosen && p.cat.lowercase() !in cats) { chosen += p; cats += p.cat.lowercase() }
-            }
-            for (p in group) {
-                if (chosen.size >= n) break
-                if (p !in chosen) chosen += p
-            }
+        for (p in pool) {
+            if (chosen.size >= n) break
+            if (p !in chosen && p.cat.lowercase() !in cats) { chosen += p; cats += p.cat.lowercase() }
+        }
+        for (p in pool) {
+            if (chosen.size >= n) break
+            if (p !in chosen) chosen += p
         }
         return chosen
     }

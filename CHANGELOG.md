@@ -2,6 +2,10 @@
 
 The newest version is first. Each section is copied into the matching GitHub release.
 
+## 1.0.9: Photos or not, all products get their turn · 24 Nov 2026
+
+- **Products without a photo aren't kept for last any more:** the picks mix products with and without photos equally, in a new order every day. What got messages and what waited longest still come first.
+
 ## 1.0.8: A quicker opening, with a moving arrow · 19 Nov 2026
 
 - **The opening is about a third faster** (about 0.9 s from the splash to the app).

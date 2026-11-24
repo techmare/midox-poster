@@ -16,11 +16,28 @@ class LogicTest {
         assertEquals(listOf("b"), picks.map { it.id })
     }
 
-    @Test fun picksPreferPhotosAndKeepTodaysPosts() {
-        val items = listOf(item("a", pics = 0), item("b"), item("c"))
+    @Test fun picksKeepTodaysPosts() {
+        val items = listOf(item("a"), item("b"), item("c"))
         val day = "2026-11-18"
-        val picks = Posts.picks(items, mapOf("c" to day), emptySet(), day, 2)
-        assertEquals(listOf("c", "b"), picks.map { it.id })
+        val picks = Posts.picks(items, mapOf("c" to day), emptySet(), day, 1)
+        assertEquals(listOf("c"), picks.map { it.id })
+    }
+
+    @Test fun picksMixPhotosAndNoPhotos() {
+        // 20 with photos, 20 without, all never posted: a week of picks should hold both kinds, mixed.
+        val items = (1..20).map { item("p$it") } + (1..20).map { item("n$it", pics = 0) }
+        val week = Posts.plan(items, emptyMap(), emptySet(), "2026-11-18", 5, 7, emptyMap())
+        val days = week.map { d -> d.second.map { it.pics.isEmpty() } }
+        assertTrue(days.flatten().contains(true) && days.flatten().contains(false))
+        // Not all the photo ones first: some day mixes, or a no-photo day comes before a photo day.
+        val firstNoPhoto = days.flatten().indexOf(true)
+        assertTrue(firstNoPhoto < 20)
+    }
+
+    @Test fun interestStillComesFirst() {
+        val items = listOf(item("a"), item("b", pics = 0))
+        val picks = Posts.picks(items, emptyMap(), emptySet(), "2026-11-18", 1, interest = mapOf("b" to 3))
+        assertEquals(listOf("b"), picks.map { it.id })
     }
 
     @Test fun planShowsEachProductOnceAWeek() {
